@@ -106,6 +106,7 @@ items:
           - plotR
           - plotLine
           - plotEquation
+          - plotPredBand
           - sig
           - ci
           - ciWidth
@@ -146,6 +147,7 @@ items:
           - plotR
           - plotLine
           - plotEquation
+          - plotPredBand
           - sig
           - ci
           - ciWidth

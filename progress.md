@@ -179,3 +179,24 @@
   queda cerrada en la UI.
 - Pendiente: reconstruir y confirmar que el factor ya no se puede
   arrastrar; el resto de puntos abiertos de rondas 4-5 sigue igual.
+
+## 2026-08-23 (ronda 7 — offset correcto, bandas CI/PI opcionales, ejes de la matriz)
+- Confirmado: recorte del eje Y (ronda 5) correcto.
+- Diagnosticado por qué el ajuste de hjust de la ronda 5 no funcionaba:
+  con `x=-Inf` el ancla ya es el borde del panel, así que subir hjust no
+  crea separación (es justificación, no padding). Fix real: usar una
+  coordenada de datos (min(x) + 2% del rango) en vez de -Inf, con
+  hjust=0 — un desplazamiento genuino en x, como pidió el usuario.
+  Aplicado también a la matriz de scatters (5% de margen, paneles más
+  pequeños).
+- Quitada la banda de predicción incondicional. Nueva opción
+  `plotPredBand` (banda de predicción, rosa `#F48FB1`, el mismo color
+  que usa jamovi-jmvplus::scat). Reutilizado `ci` para dibujar TAMBIÉN
+  una banda de confianza azul, en vez de opción nueva. Ambas
+  verificadas juntas con PNG standalone antes de integrar.
+- `.drawScatterMatrix` usaba `theme_void()` (sin ejes). Cambiado a
+  `theme_minimal()` con texto/ticks negros pequeños, sin grid. Verificado
+  con PNG standalone.
+- Pendiente: todo lo de rondas 4-6 sigue sin confirmar en jamovi real,
+  más lo nuevo de esta ronda (bandas CI/PI, offset corregido, ejes de
+  la matriz).

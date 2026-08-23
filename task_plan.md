@@ -382,13 +382,48 @@ de entrada real, el panel, queda cerrada; la función R exportada
 eso está fuera de lo reportado y no se ha añadido complejidad para un
 caso no visto).
 
+## Ronda 7 (2026-08-23): dirección del offset, bandas CI/PI opcionales, ejes en matriz
+Confirmado por el usuario: recorte del eje Y (Ronda 5) correcto.
+
+1. "El offset de la leyenda debe ser al revés, sumando x." Diagnóstico: con
+   `x = -Inf`, `hjust` NO añade separación — es justificación, no padding.
+   `hjust=0` pone el borde izquierdo del texto exactamente en el ancla
+   (-Inf = borde del panel); subir hjust (lo que hice en la Ronda 5, 0→0.02)
+   no crea hueco, solo cambia cuánto texto "debería" quedar a la izquierda
+   de un punto que ya es el límite absoluto — sin efecto útil real. Fix
+   correcto: usar una coordenada de datos real en vez de `-Inf`
+   (`x = min(x) + diff(range(x))*0.02`, `hjust=0`) — un desplazamiento
+   genuino, tal como pidió el usuario ("sumando x"). Aplicado en
+   `.drawAnnotatedScatter` (2%) y `.drawScatterMatrix` (5%, paneles más
+   pequeños). Verificado con PNG standalone antes de integrar.
+2. "No quiero la sombra del IC de predicción; que sea opción dibujar IC
+   (azul) y predicción (rosa)." La banda de predicción incondicional
+   (ligada a `plotLine`) se elimina. Nueva opción `plotPredBand` (Bool,
+   default FALSE, "Prediction band", rosa `#F48FB1` — el mismo rosa que
+   usa `jamovi-jmvplus::scat.b.R`, buen callback). Reutilizado `ci`
+   (ya existente, "Confidence interval") para dibujar TAMBIÉN una banda
+   azul de confianza (`predict(..., interval='confidence')`), en vez de
+   añadir una opción nueva solo para eso — mismo patrón de reutilización
+   que heatmapDetails/scatter-p. Orden de capas: predicción (rosa, más
+   ancha) primero, confianza (azul) encima, para que la más estrecha no
+   quede tapada. Ambas usan el mismo `ciWidth` ya existente como nivel.
+   Verificado con PNG standalone (banda rosa fuera, azul dentro,
+   correcto) antes de integrar.
+3. "En el formato matriz no se dibujan los ejes." `.drawScatterMatrix`
+   usaba `theme_void()` (sin ejes en absoluto). Cambiado a
+   `theme_minimal(base_size=6)` + texto/ticks de eje en negro tamaño 5,
+   sin grid, con el borde gris que ya tenía. Verificado con PNG
+   standalone (ticks y números visibles y legibles a tamaño mini-panel).
+
 ## Next Step
-El usuario reconstruye y prueba de nuevo, en particular que ya NO se
-pueda arrastrar un factor a Variables/Reference variable. Pendientes
-arrastradas de rondas anteriores, sin confirmar todavía:
+El usuario reconstruye y prueba de nuevo. Pendientes arrastradas de
+rondas anteriores, sin confirmar todavía:
 - Layout "Pairs" con >2 variables sin referencia (Ronda 4).
 - heatmap en modo referencia (columna única) (Ronda 4).
-- recorte del eje Y (`coord_cartesian`) con datos reales variados (Ronda 5).
 - estética del heatmap (leyenda/fuente) a tamaños reales del panel (Ronda 5).
 - IC95% de Spearman/Kendall con valores razonables, no solo que aparezcan
   (Ronda 2).
+- que el fix del factor en Variables/Reference bloquee de verdad en el
+  panel (Ronda 6).
+- las bandas CI/PI y el nuevo offset de la leyenda, a tamaños reales de
+  panel (nuevo, Ronda 7).

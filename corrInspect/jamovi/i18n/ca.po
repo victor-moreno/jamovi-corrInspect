@@ -150,6 +150,10 @@ msgid "Line equation"
 msgstr "Equació de la recta"
 
 #: jamovi/corrinspect.a.yaml
+msgid "Prediction band"
+msgstr "Banda de predicció"
+
+#: jamovi/corrinspect.a.yaml
 msgid "Correlation heatmap"
 msgstr "Mapa de calor de la correlació"
 

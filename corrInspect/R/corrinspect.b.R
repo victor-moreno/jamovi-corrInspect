@@ -242,9 +242,9 @@ corrInspectClass <- R6::R6Class(
             private$.drawAnnotatedScatter(pair[1], pair[2], ggtheme, theme)
         },
 
-        # a scatter with an optional lm fit + prediction band, and an
-        # optional r/p/CI/equation annotation -- the same idea as
-        # jamovi-jmvplus's scat.b.R, built from scratch here since this
+        # a scatter with an optional lm fit and its confidence/prediction
+        # bands, and an optional r/p/CI/equation annotation -- the same idea
+        # as jamovi-jmvplus's scat.b.R, built from scratch here since this
         # module doesn't wrap scatr::scat. Always Pearson, regardless of
         # which coefficients are ticked above (a linear fit pairs with
         # Pearson's r, not a rank correlation). Fixed light-blue points +
@@ -288,11 +288,24 @@ corrInspectClass <- R6::R6Class(
 
             if (isTRUE(self$options$plotLine)) {
                 grid <- data.frame(x = seq(min(x), max(x), length.out = 100))
-                pred <- stats::predict(lmFit, newdata = grid, interval = 'prediction')
-                ribbon <- cbind(grid, as.data.frame(pred[, c('lwr', 'upr'), drop = FALSE]))
-                p <- p + ggplot2::geom_ribbon(
-                    data = ribbon, mapping = ggplot2::aes(x = x, ymin = lwr, ymax = upr),
-                    inherit.aes = FALSE, fill = pointColour, alpha = 0.25)
+                level <- self$options$ciWidth / 100
+
+                # prediction band (pink) drawn first, wider and so behind
+                # the confidence band (blue) where they overlap.
+                if (isTRUE(self$options$plotPredBand)) {
+                    predPI <- stats::predict(lmFit, newdata = grid, interval = 'prediction', level = level)
+                    ribbonPI <- cbind(grid, as.data.frame(predPI[, c('lwr', 'upr'), drop = FALSE]))
+                    p <- p + ggplot2::geom_ribbon(
+                        data = ribbonPI, mapping = ggplot2::aes(x = x, ymin = lwr, ymax = upr),
+                        inherit.aes = FALSE, fill = '#F48FB1', alpha = 0.35)
+                }
+                if (isTRUE(self$options$ci)) {
+                    predCI <- stats::predict(lmFit, newdata = grid, interval = 'confidence', level = level)
+                    ribbonCI <- cbind(grid, as.data.frame(predCI[, c('lwr', 'upr'), drop = FALSE]))
+                    p <- p + ggplot2::geom_ribbon(
+                        data = ribbonCI, mapping = ggplot2::aes(x = x, ymin = lwr, ymax = upr),
+                        inherit.aes = FALSE, fill = pointColour, alpha = 0.35)
+                }
             }
 
             p <- p + ggplot2::geom_point(colour = pointColour, alpha = 0.7)
@@ -303,7 +316,12 @@ corrInspectClass <- R6::R6Class(
             }
 
             if (nzchar(label)) {
-                p <- p + ggplot2::annotate('text', x = -Inf, y = Inf, hjust = 0.02, vjust = 1.3,
+                # a small nudge in from the axis -- x is a real data
+                # coordinate here (not -Inf), since hjust alone can't add a
+                # gap when the anchor is already the panel's edge.
+                xRange <- range(x)
+                xPad <- diff(xRange) * 0.02
+                p <- p + ggplot2::annotate('text', x = xRange[1] + xPad, y = Inf, hjust = 0, vjust = 1.3,
                                             label = label, colour = textColour, size = 3.6)
             }
 
@@ -358,17 +376,25 @@ corrInspectClass <- R6::R6Class(
                         } else {
                             r <- stats::cor(x, y)
                             df <- data.frame(x = x, y = y)
+                            xPanelRange <- range(x)
+                            xPanelPad <- diff(xPanelRange) * 0.05
                             panels[[idx(row, col)]] <- ggplot2::ggplotGrob(
                                 ggplot2::ggplot(df, ggplot2::aes(x = x, y = y)) +
                                     ggplot2::geom_point(colour = pointColour, alpha = 0.6, size = 0.8) +
                                     ggplot2::geom_smooth(method = 'lm', formula = y ~ x, se = FALSE,
                                                           colour = lineColour, linewidth = 0.5) +
-                                    ggplot2::annotate('text', x = -Inf, y = Inf, hjust = 0.05, vjust = 1.3,
+                                    ggplot2::annotate('text', x = xPanelRange[1] + xPanelPad, y = Inf,
+                                                       hjust = 0, vjust = 1.3,
                                                        label = sprintf('r = %.2f', r),
                                                        colour = textColour, size = 2.6) +
-                                    ggplot2::theme_void() +
-                                    ggplot2::theme(panel.border = ggplot2::element_rect(
-                                        colour = 'grey85', fill = NA)))
+                                    ggplot2::theme_minimal(base_size = 6) +
+                                    ggplot2::theme(
+                                        axis.text = ggplot2::element_text(colour = 'black', size = 5),
+                                        axis.title = ggplot2::element_blank(),
+                                        axis.ticks = ggplot2::element_line(colour = 'black'),
+                                        panel.grid = ggplot2::element_blank(),
+                                        panel.border = ggplot2::element_rect(
+                                            colour = 'grey85', fill = NA)))
                         }
                     } else {
                         panels[[idx(row, col)]] <- grid::nullGrob()

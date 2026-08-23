@@ -123,6 +123,9 @@ children:
                       - type: CheckBox
                         name: plotEquation
                         enable: (plots)
+                      - type: CheckBox
+                        name: plotPredBand
+                        enable: (plots)
           - type: Label
             label: Correlation heatmap
             children:
