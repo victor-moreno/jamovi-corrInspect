@@ -141,8 +141,8 @@ options:
       description:
           ui: >
               shown in the table, and (with Scatterplots on) as a value in
-              each scatterplot's annotation plus a blue confidence band
-              around the regression line.
+              each scatterplot's annotation. See 'Confidence band' below to
+              also draw it on the plot.
           R: '`TRUE` or `FALSE` (default), provide a confidence interval for each correlation coefficient'
 
     - name: ciWidth
@@ -210,6 +210,17 @@ options:
           ui: show the fitted line's equation in each scatterplot's annotation.
           R: '`TRUE` (default) or `FALSE`, show the regression equation on the scatterplot(s)'
 
+    - name: plotCIBand
+      title: Confidence band
+      type: Bool
+      default: false
+      description:
+          ui: >
+              a blue confidence band around the regression line (needs
+              'Regression line' above; separate from the table/annotation
+              'Confidence interval' option).
+          R: '`TRUE` or `FALSE` (default), draw a confidence band on the scatterplot(s)'
+
     - name: plotPredBand
       title: Prediction band
       type: Bool
@@ -217,8 +228,8 @@ options:
       description:
           ui: >
               a pink prediction band (for individual points) around the
-              regression line, in addition to the blue confidence band
-              from 'Confidence interval' above.
+              regression line (needs 'Regression line' above), in addition
+              to the blue confidence band from 'Confidence band'.
           R: '`TRUE` or `FALSE` (default), draw a prediction band on the scatterplot(s)'
 
     - name: heatmap

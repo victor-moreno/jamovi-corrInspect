@@ -200,3 +200,15 @@
 - Pendiente: todo lo de rondas 4-6 sigue sin confirmar en jamovi real,
   más lo nuevo de esta ronda (bandas CI/PI, offset corregido, ejes de
   la matriz).
+
+## 2026-08-23 (ronda 8 — separar ci de la banda de confianza del plot)
+- `ci` ya no dibuja banda; solo controla el valor de IC en tabla y
+  anotación, como antes de la Ronda 7.
+- Nueva opción `plotCIBand` ("Confidence band"), independiente, antes de
+  `plotPredBand` en el orden de opciones y en el panel.
+- Ambas bandas (`plotCIBand`, `plotPredBand`) ahora requieren
+  `enable: (plotLine)` en el panel — extendí la regla del usuario
+  ("solo si está activa la recta") a las dos, no solo a la nueva.
+- Traducciones añadidas ("Confidence band") en es.po/ca.po.
+- Pendiente: todo lo de rondas 4-7 sigue sin confirmar en jamovi real,
+  más este cambio (separación ci/plotCIBand, enable de ambas bandas).

@@ -415,6 +415,27 @@ Confirmado por el usuario: recorte del eje Y (Ronda 5) correcto.
    sin grid, con el borde gris que ya tenía. Verificado con PNG
    standalone (ticks y números visibles y legibles a tamaño mini-panel).
 
+## Ronda 8 (2026-08-23): separar IC de tabla vs. banda de confianza del plot
+Pedido: "separa el intervalo de confianza de la tabla (existente) del de
+la recta del diagrama de dispersión. Añade una opción 'Banda de
+confianza' antes de Banda de predicción, que solo se pueda activar si
+está activa la recta de regresión."
+
+- `ci` (opción existente) vuelve a significar SOLO "mostrar el valor de
+  IC en la tabla y en el texto de la anotación" — ya no dibuja banda.
+- Nueva opción `plotCIBand` ("Confidence band"), Bool default FALSE,
+  colocada antes de `plotPredBand` en a.yaml y en el panel (u.yaml).
+  Dibuja la banda azul (`predict(..., interval='confidence')`) en
+  `.drawAnnotatedScatter`, sustituyendo la condición `self$options$ci`
+  que tenía antes por `self$options$plotCIBand`.
+- Ambas `plotCIBand` y `plotPredBand` cambiadas a `enable: (plotLine)`
+  en u.yaml (antes `plotPredBand` tenía `enable: (plots)`) — el usuario
+  solo pidió esto para la nueva opción, pero lo apliqué también a
+  `plotPredBand` por consistencia (una banda sin línea no tiene sentido,
+  y dejar una casilla activable que no hace nada visible sería confuso).
+- Añadida traducción "Confidence band"→"Banda de confianza"/"Banda de
+  confiança" en es.po/ca.po.
+
 ## Next Step
 El usuario reconstruye y prueba de nuevo. Pendientes arrastradas de
 rondas anteriores, sin confirmar todavía:
@@ -425,5 +446,7 @@ rondas anteriores, sin confirmar todavía:
   (Ronda 2).
 - que el fix del factor en Variables/Reference bloquee de verdad en el
   panel (Ronda 6).
-- las bandas CI/PI y el nuevo offset de la leyenda, a tamaños reales de
-  panel (nuevo, Ronda 7).
+- las bandas CI/PI, el offset de la leyenda y los ejes de la matriz, a
+  tamaños reales de panel (Ronda 7).
+- que `plotCIBand` separado de `ci` funcione como se espera, y que el
+  `enable: (plotLine)` en ambas bandas se comporte bien (nuevo, Ronda 8).

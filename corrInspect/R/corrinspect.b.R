@@ -299,7 +299,7 @@ corrInspectClass <- R6::R6Class(
                         data = ribbonPI, mapping = ggplot2::aes(x = x, ymin = lwr, ymax = upr),
                         inherit.aes = FALSE, fill = '#F48FB1', alpha = 0.35)
                 }
-                if (isTRUE(self$options$ci)) {
+                if (isTRUE(self$options$plotCIBand)) {
                     predCI <- stats::predict(lmFit, newdata = grid, interval = 'confidence', level = level)
                     ribbonCI <- cbind(grid, as.data.frame(predCI[, c('lwr', 'upr'), drop = FALSE]))
                     p <- p + ggplot2::geom_ribbon(

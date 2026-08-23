@@ -16,8 +16,10 @@ A jamovi module that clones `jmv::corrMatrix`, redesigned for cleaner output:
   that alone can't add a gap when the anchor is already the panel edge)
   in the plot's corner annotation. Light-blue points, black regression
   line and axes, regardless of jamovi's active theme. No band is drawn by
-  default; "Confidence interval" (reused) adds a blue confidence band and
-  "Prediction band" adds a pink one, either or both. The y-axis is
+  default; both need "Regression line" on: "Confidence band" (its own
+  option, separate from the table/annotation "Confidence interval") adds
+  a blue band, "Prediction band" adds a pink one, either or both. The
+  y-axis is
   clipped to the data's own range plus headroom for the annotation,
   rather than stretching to fit a band that overshoots the data (e.g.
   below 0 for a variable that never is). With more than two Variables and
@@ -63,7 +65,7 @@ gridExtra plot compositions (the scatterplot matrix, the square heatmap
 with a bottom legend, the left-aligned annotation) are rendered to a plain
 PNG standalone before being wired into the module, to catch composition
 bugs before jamovi-specific ones -- but the module itself still only gets
-validated when the user builds and clicks through it. Seven real-test
+validated when the user builds and clicks through it. Eight real-test
 rounds so far (2026-08-23). `enable: (refVar)` and the translations are
 confirmed working. Fixed: `vars`/`refVar` permitted `factor` alongside
 `numeric` (copied from jmv's own corrMatrix), so jamovi let a nominal
@@ -74,7 +76,10 @@ reading), and the analysis crashed calling `sd()` on it directly. Now
 of it reaching R at all. Round 7: the always-on prediction band was
 replaced with optional confidence (blue)/prediction (pink) bands, the
 annotation's axis gap was fixed properly (a real x nudge, not `hjust`
-alone), and the scatterplot matrix's panels gained real axes.
+alone), and the scatterplot matrix's panels gained real axes. Round 8:
+the plot's confidence band got its own option (`plotCIBand`), separate
+from the table/annotation `ci` it was reusing -- both bands now also
+require "Regression line" to be on.
 
 ## Build
 

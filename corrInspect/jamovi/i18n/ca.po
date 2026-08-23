@@ -150,6 +150,10 @@ msgid "Line equation"
 msgstr "Equació de la recta"
 
 #: jamovi/corrinspect.a.yaml
+msgid "Confidence band"
+msgstr "Banda de confiança"
+
+#: jamovi/corrinspect.a.yaml
 msgid "Prediction band"
 msgstr "Banda de predicció"
 
