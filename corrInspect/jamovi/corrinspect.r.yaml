@@ -1,0 +1,128 @@
+---
+name: corrInspect
+title: Correlation Inspector
+jrs: '1.1'
+
+items:
+    - name: tableAllVsAll
+      title: Correlations
+      type: Table
+      visible: (mode:allVsAll)
+      clearWith:
+          - vars
+          - pearson
+          - spearman
+          - kendall
+          - hypothesis
+          - ciWidth
+      columns:
+          - name: var1
+            title: ''
+            type: text
+            combineBelow: true
+          - name: var2
+            title: ''
+            type: text
+            combineBelow: true
+          - name: stat
+            title: ''
+            type: text
+          - name: r
+            title: r
+            type: number
+            format: zto
+          - name: ci
+            title: 95% CI
+            type: text
+            visible: (ci)
+          - name: n
+            title: 'N'
+            type: integer
+            visible: (n)
+          - name: p
+            title: p
+            type: number
+            format: zto,pvalue
+            visible: (sig)
+          - name: stars
+            title: ''
+            type: text
+            visible: (flag)
+
+    - name: tableRefVsRest
+      title: Correlations
+      type: Table
+      visible: (mode:refVsRest)
+      clearWith:
+          - refVar
+          - compareVars
+          - pearson
+          - spearman
+          - kendall
+          - hypothesis
+          - ciWidth
+      columns:
+          - name: var2
+            title: Compared with
+            type: text
+            combineBelow: true
+          - name: stat
+            title: ''
+            type: text
+          - name: r
+            title: r
+            type: number
+            format: zto
+          - name: ci
+            title: 95% CI
+            type: text
+            visible: (ci)
+          - name: n
+            title: 'N'
+            type: integer
+            visible: (n)
+          - name: p
+            title: p
+            type: number
+            format: zto,pvalue
+            visible: (sig)
+          - name: stars
+            title: ''
+            type: text
+            visible: (flag)
+
+    - name: plotAllVsAll
+      title: Scatterplot
+      type: Image
+      visible: false
+      requiresData: true
+      renderFun: .plotAllVsAll
+      clearWith:
+          - vars
+          - pearson
+          - spearman
+          - kendall
+          - ci
+          - ciWidth
+          - plotDens
+          - mode
+
+    - name: plotRefVsRest
+      title: Scatterplots
+      type: Array
+      visible: false
+      template:
+          type: Image
+          renderFun: .plotRefVsRest
+          requiresData: true
+      clearWith:
+          - refVar
+          - compareVars
+          - refAxis
+          - pearson
+          - ci
+          - ciWidth
+          - plotDens
+          - mode
+
+...

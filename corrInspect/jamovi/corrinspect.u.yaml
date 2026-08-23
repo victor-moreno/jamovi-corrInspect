@@ -1,0 +1,124 @@
+title: Correlation Inspector
+name: corrInspect
+jus: '3.0'
+stage: 0
+compilerMode: tame
+children:
+    - type: VariableSupplier
+      name: variablesupplier
+      suggested: [ continuous, ordinal ]
+      persistentItems: false
+      stretchFactor: 1
+      children:
+          - type: TargetLayoutBox
+            label: Variables
+            children:
+                - type: VariablesListBox
+                  name: vars
+                  isTarget: true
+                  enable: (mode:allVsAll)
+          - type: TargetLayoutBox
+            label: Reference variable
+            children:
+                - type: VariablesListBox
+                  name: refVar
+                  isTarget: true
+                  maxItemCount: 1
+                  enable: (mode:refVsRest)
+          - type: TargetLayoutBox
+            label: Compare with
+            children:
+                - type: VariablesListBox
+                  name: compareVars
+                  isTarget: true
+                  enable: (mode:refVsRest)
+
+    - type: LayoutBox
+      margin: large
+      style: inline
+      children:
+          - type: Label
+            label: Analysis mode
+            children:
+                - type: RadioButton
+                  name: mode_allVsAll
+                  optionName: mode
+                  optionPart: allVsAll
+                - type: RadioButton
+                  name: mode_refVsRest
+                  optionName: mode
+                  optionPart: refVsRest
+          - type: Label
+            label: Reference variable axis
+            children:
+                - type: RadioButton
+                  name: refAxis_x
+                  optionName: refAxis
+                  optionPart: x
+                  enable: (mode:refVsRest)
+                - type: RadioButton
+                  name: refAxis_y
+                  optionName: refAxis
+                  optionPart: y
+                  enable: (mode:refVsRest)
+
+    - type: LayoutBox
+      margin: large
+      style: inline
+      children:
+          - type: Label
+            label: Correlation Coefficients
+            children:
+                - type: CheckBox
+                  name: pearson
+                - type: CheckBox
+                  name: spearman
+                - type: CheckBox
+                  name: kendall
+          - type: Label
+            label: Additional Options
+            children:
+                - type: CheckBox
+                  name: sig
+                - type: CheckBox
+                  name: flag
+                - type: CheckBox
+                  name: 'n'
+                - type: CheckBox
+                  name: ci
+                  children:
+                      - type: TextBox
+                        name: ciWidth
+                        label: Interval
+                        suffix: '%'
+                        format: number
+                        enable: (ci)
+
+    - type: LayoutBox
+      margin: large
+      style: inline
+      children:
+          - type: Label
+            label: Hypothesis
+            children:
+                - type: RadioButton
+                  name: hypothesis_corr
+                  optionName: hypothesis
+                  optionPart: corr
+                - type: RadioButton
+                  name: hypothesis_pos
+                  optionName: hypothesis
+                  optionPart: pos
+                - type: RadioButton
+                  name: hypothesis_neg
+                  optionName: hypothesis
+                  optionPart: neg
+          - type: Label
+            label: Plot
+            children:
+                - type: CheckBox
+                  name: plots
+                  children:
+                      - type: CheckBox
+                        name: plotDens
+                        enable: (plots)

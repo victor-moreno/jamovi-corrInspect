@@ -1,0 +1,184 @@
+---
+name: corrInspect
+title: Correlation Inspector
+menuGroup: Regression
+menuSubgroup: Correlation
+menuTitle: Correlation Inspector
+menuSubtitle: Pairwise & one-vs-rest correlations
+
+version: '1.0.0'
+jas: '1.2'
+
+weightsSupport: 'none'
+
+description:
+    main: >
+        Correlations between two or more variables, presented pair by pair
+        instead of as a matrix. With exactly two variables this is a single
+        clean result. With more, choose between comparing all variables
+        against all others, or one reference variable against the rest --
+        useful for inspecting candidate predictors or confounders before a
+        regression.
+    R:
+        dontrun: false
+        usage: |
+            corrInspect::corrInspect(data = mtcars, vars = c('mpg', 'hp', 'wt'))
+
+options:
+    - name: data
+      type: Data
+      description:
+          R: the data as a data frame
+
+    - name: mode
+      title: Analysis mode
+      type: List
+      options:
+        - name: allVsAll
+          title: All variables vs. all
+        - name: refVsRest
+          title: One variable vs. the rest
+      default: allVsAll
+      description:
+          ui: >
+              'All variables vs. all' compares every selected variable
+              against every other. 'One variable vs. the rest' compares a
+              single reference variable against a set of others.
+          R: >
+              `'allVsAll'` (default) or `'refVsRest'`, which comparison
+              layout to use
+
+    - name: vars
+      title: Variables
+      type: Variables
+      suggested: [ continuous, ordinal ]
+      permitted: [ numeric, factor ]
+      default: ~
+      description:
+          ui: the variables to correlate, pairwise (used in 'All variables vs. all' mode).
+          R: a vector of strings naming the variables to correlate pairwise in `data`
+
+    - name: refVar
+      title: Reference variable
+      type: Variable
+      suggested: [ continuous, ordinal ]
+      permitted: [ numeric, factor ]
+      default: ~
+      description:
+          ui: the variable to compare against each of `compareVars` (used in 'One variable vs. the rest' mode).
+          R: a string naming the reference variable in `data`
+
+    - name: compareVars
+      title: Compare with
+      type: Variables
+      suggested: [ continuous, ordinal ]
+      permitted: [ numeric, factor ]
+      default: ~
+      description:
+          ui: the variables to compare against the reference variable (used in 'One variable vs. the rest' mode).
+          R: a vector of strings naming the variables in `data` to compare against `refVar`
+
+    - name: refAxis
+      title: Reference variable axis
+      type: List
+      options:
+        - name: x
+          title: X
+        - name: y
+          title: 'Y'
+      default: x
+      description:
+          ui: which axis holds the reference variable in the inspector scatterplots.
+          R: '`''x''` (default) or `''y''`, which axis the reference variable is plotted on'
+
+    - name: pearson
+      title: Pearson
+      type: Bool
+      default: true
+      description:
+          R: '`TRUE` (default) or `FALSE`, provide Pearson''s r'
+
+    - name: spearman
+      title: Spearman
+      type: Bool
+      default: false
+      description:
+          R: '`TRUE` or `FALSE` (default), provide Spearman''s rho'
+
+    - name: kendall
+      title: Kendall's tau-b
+      type: Bool
+      default: false
+      description:
+          R: '`TRUE` or `FALSE` (default), provide Kendall''s tau-b'
+
+    - name: hypothesis
+      title: Hypothesis
+      type: List
+      options:
+        - name: corr
+          title: Correlated
+        - name: pos
+          title: Correlated positively
+        - name: neg
+          title: Correlated negatively
+      default: corr
+      description:
+          ui: the alternative hypothesis. Allows for one-tailed tests.
+          R: >
+              one of `'corr'` (default), `'pos'`, `'neg'` specifying the
+              alternative hypothesis; correlated, correlated positively,
+              correlated negatively respectively
+
+    - name: sig
+      title: Report p-value
+      type: Bool
+      default: true
+      description:
+          R: '`TRUE` (default) or `FALSE`, provide a p-value for each correlation'
+
+    - name: flag
+      title: Flag significant correlations
+      type: Bool
+      default: false
+      description:
+          R: '`TRUE` or `FALSE` (default), flag significant correlations (p < .05) with an asterisk'
+
+    - name: n
+      title: 'N'
+      type: Bool
+      default: false
+      description:
+          R: '`TRUE` or `FALSE` (default), provide the number of cases'
+
+    - name: ci
+      title: Confidence interval
+      type: Bool
+      default: false
+      description:
+          R: '`TRUE` or `FALSE` (default), provide a confidence interval for Pearson''s r'
+
+    - name: ciWidth
+      title: Confidence interval width
+      type: Number
+      min: 50
+      max: 99.9
+      default: 95
+      description:
+          R: a number between 50 and 99.9 (default 95), the confidence interval width
+
+    - name: plots
+      title: Scatterplots
+      type: Bool
+      default: false
+      description:
+          R: '`TRUE` or `FALSE` (default), provide annotated scatterplot(s)'
+
+    - name: plotDens
+      title: Densities for variables
+      type: Bool
+      default: false
+      description:
+          R: '`TRUE` or `FALSE` (default), add marginal densities to the scatterplot(s)'
+
+...

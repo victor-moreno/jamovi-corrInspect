@@ -1,0 +1,3 @@
+# Generated/maintained alongside jmvtools::prepare() -- see build-install-ship.md
+# in the jamovi-skill: jamovi reaches analyses via namespace[[paste0(name,"Class")]],
+# bypassing the export list entirely, so no exports are required.
