@@ -1,3 +1,6 @@
 # Generated/maintained alongside jmvtools::prepare() -- see build-install-ship.md
-# in the jamovi-skill: jamovi reaches analyses via namespace[[paste0(name,"Class")]],
-# bypassing the export list entirely, so no exports are required.
+# in the jamovi-skill: jamovi itself reaches analyses via
+# namespace[[paste0(name,"Class")]], bypassing the export list entirely. This
+# export exists only so corrInspect::corrInspect(...) is callable from a
+# plain R script (headless testing, tools/install.sh's Docker smoke test).
+export(corrInspect)

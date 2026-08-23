@@ -10,12 +10,11 @@ authors:
   - Victor Moreno
 maintainer: Victor Moreno <v.moreno@iconcologia.net>
 description: >
-  A clone of jmv's Correlation Matrix analysis, redesigned for cleaner
-  output: a tidy one-row-per-pair table instead of a sparse n-by-n matrix
-  (naturally a single row for two variables), an inspector mode that
-  compares one reference variable against several others, and scatterplots
-  annotated in place with r, its confidence interval and the fitted
-  regression line.
+  A clone of jmv's Correlation Matrix analysis, redesigned for cleaner output: a
+  tidy one-row-per-pair table instead of a sparse n-by-n matrix (naturally a
+  single row for two variables), an inspector mode that compares one reference
+  variable against several others, and scatterplots annotated in place with r,
+  its confidence interval and the fitted regression line.
 analyses:
   - title: Correlation Inspector
     name: corrInspect
@@ -25,11 +24,11 @@ analyses:
     menuTitle: Correlation Inspector
     menuSubtitle: Pairwise & one-vs-rest correlations
     description: >
-      Correlations between two or more variables, presented pair by pair.
-      With exactly two variables this is a single clean result; with more,
-      choose between comparing all variables against all others, or one
-      reference variable against the rest (for spotting candidate
-      predictors or confounders before a regression).
+      Correlations between two or more variables, presented pair by pair instead
+      of as a matrix. With exactly two variables this is a single clean result.
+      With more, choose between comparing all variables against all others, or
+      one reference variable against the rest -- useful for inspecting candidate
+      predictors or confounders before a regression.
     category: analyses
 usesNative: false
 minApp: 1.0.8
