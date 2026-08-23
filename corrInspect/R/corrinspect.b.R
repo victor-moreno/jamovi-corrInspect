@@ -47,7 +47,7 @@ corrInspectClass <- R6::R6Class(
                     for (m in methods) {
                         self$results$tableRefVsRest$addRow(
                             rowKey = paste(v, m, sep = '|'),
-                            values = list(var2 = v, stat = methodLabel(m)))
+                            values = list(var2 = v, stat = self$translate(methodLabel(m))))
                     }
                 }
             } else {
@@ -55,7 +55,8 @@ corrInspectClass <- R6::R6Class(
                     for (m in methods) {
                         self$results$tableAllVsAll$addRow(
                             rowKey = paste(pair[1], pair[2], m, sep = '|'),
-                            values = list(var1 = pair[1], var2 = pair[2], stat = methodLabel(m)))
+                            values = list(var1 = pair[1], var2 = pair[2],
+                                          stat = self$translate(methodLabel(m))))
                     }
                 }
             }
@@ -140,7 +141,8 @@ corrInspectClass <- R6::R6Class(
             flag <- isTRUE(self$options$flag)
             data <- self$data
             tbl <- self$results$tableRefVsRest
-            tbl$setTitle(paste0('Correlations — ', refVar, ' vs. others'))
+            tbl$setTitle(paste0(self$translate('Correlations'), ' — ', refVar, ' ',
+                                 self$translate('vs. others')))
 
             x <- jmvcore::toNumeric(data[[refVar]])
             for (v in restVars) {
@@ -245,7 +247,9 @@ corrInspectClass <- R6::R6Class(
         # jamovi-jmvplus's scat.b.R, built from scratch here since this
         # module doesn't wrap scatr::scat. Always Pearson, regardless of
         # which coefficients are ticked above (a linear fit pairs with
-        # Pearson's r, not a rank correlation).
+        # Pearson's r, not a rank correlation). Fixed light-blue points +
+        # black line/axes (not theme-derived) so the plot reads clearly
+        # regardless of jamovi's active theme.
         .drawAnnotatedScatter = function(xvar, yvar, ggtheme, theme) {
             data <- self$data
             x <- jmvcore::toNumeric(data[[xvar]])
@@ -277,8 +281,8 @@ corrInspectClass <- R6::R6Class(
             label <- paste(lines, collapse = '\n')
 
             textColour <- ggplot2::calc_element('text', themeOnly(ggtheme))$colour
-            pointColour <- if (!is.null(theme$color)) theme$color[1] else '#3366CC'
-            fillColour <- if (!is.null(theme$fill)) theme$fill[1] else '#3366CC'
+            pointColour <- '#5DADE2'
+            lineColour <- 'black'
 
             p <- ggplot2::ggplot(df, ggplot2::aes(x = x, y = y))
 
@@ -288,22 +292,38 @@ corrInspectClass <- R6::R6Class(
                 ribbon <- cbind(grid, as.data.frame(pred[, c('lwr', 'upr'), drop = FALSE]))
                 p <- p + ggplot2::geom_ribbon(
                     data = ribbon, mapping = ggplot2::aes(x = x, ymin = lwr, ymax = upr),
-                    inherit.aes = FALSE, fill = fillColour, alpha = 0.25)
+                    inherit.aes = FALSE, fill = pointColour, alpha = 0.25)
             }
 
             p <- p + ggplot2::geom_point(colour = pointColour, alpha = 0.7)
 
             if (isTRUE(self$options$plotLine)) {
                 p <- p + ggplot2::geom_smooth(method = 'lm', formula = y ~ x, se = FALSE,
-                                               colour = pointColour)
+                                               colour = lineColour)
             }
 
             if (nzchar(label)) {
-                p <- p + ggplot2::annotate('text', x = -Inf, y = Inf, hjust = 0, vjust = 1.3,
+                p <- p + ggplot2::annotate('text', x = -Inf, y = Inf, hjust = 0.02, vjust = 1.3,
                                             label = label, colour = textColour, size = 3.6)
             }
 
-            p <- p + ggplot2::labs(x = xvar, y = yvar) + ggtheme
+            # the prediction band can overshoot well past the data's own
+            # range (e.g. below 0 for a variable that's never negative) and
+            # drag the axis down with it; clip display to the data instead,
+            # with headroom on top for the annotation.
+            yRange <- range(y)
+            ySpan <- diff(yRange)
+            topPad <- if (nzchar(label)) 0.15 else 0.05
+            p <- p + ggplot2::coord_cartesian(
+                ylim = c(yRange[1] - ySpan * 0.05, yRange[2] + ySpan * topPad))
+
+            p <- p +
+                ggplot2::labs(x = xvar, y = yvar) +
+                ggtheme +
+                ggplot2::theme(
+                    axis.text = ggplot2::element_text(colour = 'black'),
+                    axis.title = ggplot2::element_text(colour = 'black'),
+                    axis.ticks = ggplot2::element_line(colour = 'black'))
 
             print(p)
             TRUE
@@ -316,7 +336,8 @@ corrInspectClass <- R6::R6Class(
             data <- self$data
             n <- length(vars)
             textColour <- ggplot2::calc_element('text', themeOnly(ggtheme))$colour
-            pointColour <- if (!is.null(theme$color)) theme$color[1] else '#3366CC'
+            pointColour <- '#5DADE2'
+            lineColour <- 'black'
 
             idx <- function(row, col) (row - 1) * n + col
             panels <- vector('list', n * n)
@@ -341,8 +362,8 @@ corrInspectClass <- R6::R6Class(
                                 ggplot2::ggplot(df, ggplot2::aes(x = x, y = y)) +
                                     ggplot2::geom_point(colour = pointColour, alpha = 0.6, size = 0.8) +
                                     ggplot2::geom_smooth(method = 'lm', formula = y ~ x, se = FALSE,
-                                                          colour = pointColour, linewidth = 0.5) +
-                                    ggplot2::annotate('text', x = -Inf, y = Inf, hjust = -0.1, vjust = 1.3,
+                                                          colour = lineColour, linewidth = 0.5) +
+                                    ggplot2::annotate('text', x = -Inf, y = Inf, hjust = 0.05, vjust = 1.3,
                                                        label = sprintf('r = %.2f', r),
                                                        colour = textColour, size = 2.6) +
                                     ggplot2::theme_void() +
@@ -414,9 +435,14 @@ corrInspectClass <- R6::R6Class(
                 ggplot2::scale_fill_gradient2(low = '#B2182B', mid = 'white', high = '#2166AC',
                                                midpoint = 0, limits = c(-1, 1)) +
                 ggplot2::coord_fixed() +
-                ggplot2::labs(x = NULL, y = NULL, fill = methodLabel(method)) +
+                ggplot2::labs(x = NULL, y = NULL, fill = self$translate(methodLabel(method))) +
                 themeOnly(ggtheme) +
-                ggplot2::theme(legend.position = 'bottom')
+                ggplot2::theme(
+                    legend.position = 'bottom',
+                    legend.title = ggplot2::element_text(size = 8),
+                    legend.text = ggplot2::element_text(size = 7)) +
+                ggplot2::guides(fill = ggplot2::guide_colorbar(
+                    barwidth = grid::unit(5, 'cm'), barheight = grid::unit(0.35, 'cm')))
         },
 
         # r (with a significance flag, if on) on its own line; CI/p/N appended

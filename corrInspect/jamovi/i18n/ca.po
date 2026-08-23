@@ -76,6 +76,18 @@ msgstr "Spearman"
 msgid "Kendall's tau-b"
 msgstr "Tau-b de Kendall"
 
+#: R/corrCompute.R
+msgid "Pearson's r"
+msgstr "r de Pearson"
+
+#: R/corrCompute.R
+msgid "Spearman's rho"
+msgstr "rho de Spearman"
+
+#: R/corrinspect.b.R
+msgid "vs. others"
+msgstr "vs. la resta"
+
 #: jamovi/corrinspect.a.yaml
 #: jamovi/corrinspect.u.yaml
 msgid "Hypothesis"

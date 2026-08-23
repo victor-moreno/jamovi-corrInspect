@@ -280,21 +280,90 @@ heatmap" como Labels propios, que ya tenían entrada); añadidas "Layout",
 seguirá reapareciendo/desapareciendo con cada build del usuario, es
 esperado.
 
+## Ronda 5 (2026-08-23): confirmaciones + factor en refVar + i18n dinámico + estética scatter/heatmap
+Usuario confirma: `enable: (refVar)` funciona (ronda 2, ya cerrado) y las
+traducciones funcionan (ronda 3, ya cerrado) — quitados de "pendientes".
+
+1. **BUG SIN DIAGNOSTICAR**: "refVar funciona bien, impide que se pueda
+   añadir un factor, pues aparece un error." No tengo el texto exacto del
+   error. Investigué varias hipótesis (jmvcore::toNumeric fallando en
+   factores nominales con etiquetas de texto; alguna diferencia entre
+   `type: Variable` singular vs `type: Variables` plural en el schema del
+   compilador) pero ninguna explica de forma concluyente un ERROR duro
+   (mis guards de `complete.cases`/`length(x)<3` deberían capturar un
+   `toNumeric()` que devuelve todo NA sin lanzar excepción). No adiviné
+   un fix sin evidencia — pedido al usuario el texto exacto del error en
+   la respuesta.
+2. "Traducciones... no se usa Pearson's sino 'r de Pearson'." → Esto reveló
+   que `methodLabel()` (string generado en R, no en yaml) SÍ es
+   traducible: investigué la fuente real de jmvcore instalado
+   (`jmvcore:::Analysis$public_methods$translate`,
+   `jmvcore:::Options$public_methods$translate`,
+   `jmvcore:::createTranslator`) y confirmé que:
+   - `self$translate(text)` (método público de cualquier Analysis) es la
+     API correcta.
+   - Internamente llama `createTranslator(private$.package, private$.lang)`,
+     que carga `system.file("i18n/<lang>.json", package=<package>)` — es
+     decir, EL MISMO `inst/i18n/<lang>.json` que ya se genera desde
+     `jamovi/i18n/*.po`. Un solo catálogo sirve para UI y para backend R.
+   - Si el `msgid` no está en el catálogo, `translate()` devuelve el texto
+     original sin más (fallback seguro, no hay riesgo de romper nada al
+     envolver strings que no estén traducidas).
+   Aplicado `self$translate(methodLabel(m))` en `.initTable()` (columna
+   `stat` de ambas tablas) y en la leyenda del heatmap
+   (`labs(fill=self$translate(methodLabel(method)))`); y
+   `self$translate('Correlations')`/`self$translate('vs. others')` para
+   el título dinámico de `tableRefVsRest`. Añadidas "Pearson's r"→"r de
+   Pearson", "Spearman's rho"→"rho de Spearman" (Kendall's tau-b ya
+   existía, mismo string que el título de la opción) y "vs. others"→"vs.
+   el resto"/"vs. la resta" en es.po/ca.po.
+3. "Las leyendas empiezan justo en el eje, desplázalas al menos 1
+   carácter." → `hjust` de la anotación: `0` → `0.02` (scatter anotado) y
+   `-0.1` → `0.05` (matriz de scatters, el valor negativo empujaba el
+   texto FUERA del panel, no solo pegado al eje).
+4. "Aumenta la escala del eje Y un 10-15% para acomodar las leyendas sin
+   que tapen puntos" + "el 0 muy alto con mucho espacio en blanco debajo
+   cuando no hay negativos, el máximo sí es correcto, pasa con ceros en
+   la variable" → mismo fix para ambos: la banda de predicción
+   (`predict(..., interval='prediction')`) puede extenderse muy por
+   debajo del rango real de los datos (confirmado con un ejemplo
+   standalone: datos en [0, 30], banda hasta -13), y ggplot2 expande el
+   eje para acomodarla entera. Cambiado a `coord_cartesian(ylim=...)`
+   calculado sobre el rango de los DATOS (no de la banda), con margen
+   inferior 5% y superior 15% (5% si no hay anotación) — recorta la
+   banda visualmente sin afectar el ajuste ni los datos. Verificado
+   antes/después con PNG standalone (capturas en la conversación).
+5. "Pon color a los plots de dispersión, ejes en negro, puntos en azul
+   claro, línea en negro." → colores fijos (ya no derivados de
+   `theme$color`/`theme$fill`, que dependían del tema activo de jamovi):
+   `pointColour='#5DADE2'` (azul claro), `lineColour='black'`, y
+   `theme(axis.text=..., axis.title=..., axis.ticks=element_*(colour=
+   'black'))` añadido DESPUÉS de `ggtheme` en la cadena (para que
+   sobreescriba, no antes — el orden importa). Aplicado tanto al scatter
+   anotado como a los mini-paneles de la matriz. Nota para el usuario:
+   esto fuerza negro pase lo que pase con el tema oscuro de jamovi (texto
+   de la anotación en sí se dejó como estaba, derivado del tema, para no
+   arriesgar legibilidad en modo oscuro — solo ejes se fuerzan a negro,
+   que es lo que pidió explícitamente).
+6. "La letra de la leyenda del heatmap es muy grande respecto a la barra
+   de color... reduce la fuente y aumenta el espacio de la barra." →
+   `legend.title`/`legend.text` a tamaño 8/7 (antes heredado del tema,
+   más grande) + `guide_colorbar(barwidth=unit(5,'cm'),
+   barheight=unit(0.35,'cm'))`. Verificado con PNG standalone antes de
+   integrar.
+
+Densities (eliminado la ronda pasada) no se volvió a tocar — el usuario
+no lo mencionó esta vez, coherente con que ya no existe.
+
 ## Next Step
-El usuario reconstruye (`bash tools/install.sh`) y prueba de nuevo.
-Puntos concretos a verificar, de más a menos arrastrados de rondas
-anteriores:
-- `enable: (refVar)` — sin confirmar desde la Ronda 2.
-- traducciones es.po/ca.po aplicándose de verdad al cambiar idioma —
-  sin confirmar desde la Ronda 3.
-- Layout "Pairs" con >2 variables sin referencia: que genere todos los
-  pares correctamente (nuevo este round, la parte más compleja
-  arquitectónicamente).
-- heatmap en modo referencia (columna única) — nuevo, sin probar en
-  jamovi real.
-- aspecto cuadrado + leyenda abajo del heatmap — verificado solo
-  standalone, no dentro del panel real de jamovi (tamaños de imagen,
-  fuentes, puede verse distinto).
-- que plotR/plotLine/plotEquation realmente cambien el plot al
-  desmarcarlos (guardas simples, riesgo bajo, pero no probado en vivo).
+El usuario reconstruye y prueba de nuevo. Punto bloqueante real: dame el
+texto exacto del error al meter un factor en "Reference variable" — sin
+eso no puedo diagnosticar el punto 1 de la Ronda 5. Aparte, a confirmar:
+- Layout "Pairs" con >2 variables sin referencia (arrastrado de la
+  Ronda 4, sin confirmar todavía).
+- heatmap en modo referencia (columna única) — arrastrado de la Ronda 4.
+- que el recorte del eje Y (`coord_cartesian`) se vea bien con datos
+  reales variados, no solo el ejemplo sintético usado para verificar.
+- estética del heatmap (leyenda/fuente) a tamaños reales del panel de
+  jamovi, no solo el PNG standalone probado aquí.
 - IC95% de Spearman/Kendall: valores razonables, no solo que "aparezcan".

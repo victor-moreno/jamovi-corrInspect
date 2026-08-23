@@ -11,11 +11,16 @@ A jamovi module that clones `jmv::corrMatrix`, redesigned for cleaner output:
   and the analysis switches to comparing it against the rest of Variables,
   no separate mode switch to keep in sync.
 - **Annotated scatterplot(s)**: r, p, the fitted regression line and its
-  equation are each independently toggleable, left-aligned in the plot's
-  corner annotation. With more than two Variables and no reference
-  variable, a Layout choice: **Matrix** (small panels, one per pair) or
-  **Pairs** (one full-sized annotated scatter per pair, an array -- the
-  same shape a reference variable's comparisons already used).
+  equation are each independently toggleable, left-aligned (with a small
+  inset from the axis) in the plot's corner annotation. Light-blue points,
+  black regression line and axes, regardless of jamovi's active theme. The
+  y-axis is clipped to the data's own range plus headroom for the
+  annotation, rather than stretching to fit the prediction band (which can
+  overshoot the data, e.g. below 0 for a variable that never is). With
+  more than two Variables and no reference variable, a Layout choice:
+  **Matrix** (small panels, one per pair) or **Pairs** (one full-sized
+  annotated scatter per pair, an array -- the same shape a reference
+  variable's comparisons already used).
 - **Colour-coded heatmap**, its own toggle independent of the scatterplot
   option -- both can be shown at once -- for the all-vs-all overview with
   more than two variables (instead of jmv's plain-text matrix plot), or a
@@ -29,10 +34,14 @@ A jamovi module that clones `jmv::corrMatrix`, redesigned for cleaner output:
   via the Fisher z-transform with the Fieller, Hartley & Pearson (1957)
   variance correction (`Var(z) = 0.437/(n-4)`) — base R's `cor.test` has no
   CI for those two.
-- **Spanish and Catalan translations** (`jamovi/i18n/es.po`, `ca.po`) for
-  all visible menu/option/table/plot text. Long tooltips and R-generated
-  dynamic strings (the reference-mode table's title, method labels) aren't
-  translated yet -- see `task_plan.md` for why.
+- **Spanish and Catalan translations** (`jamovi/i18n/es.po`, `ca.po`),
+  confirmed working by the user. Covers all static yaml UI text, plus
+  R-generated dynamic strings via `self$translate()` (`jmvcore::Analysis`'s
+  built-in translator, reading the same compiled `inst/i18n/*.json` as the
+  UI side -- confirmed by reading the jmvcore source, see
+  `task_plan.md`): the method labels ("r de Pearson", not "Pearson's r")
+  and the reference-mode table's title. Long tooltip descriptions aren't
+  translated yet.
 
 See `corrInspect/` for the R package (jamovi module). `task_plan.md`,
 `findings.md` and `progress.md` at the repo root are the working notes from
@@ -50,11 +59,11 @@ gridExtra plot compositions (the scatterplot matrix, the square heatmap
 with a bottom legend, the left-aligned annotation) are rendered to a plain
 PNG standalone before being wired into the module, to catch composition
 bugs before jamovi-specific ones -- but the module itself still only gets
-validated when the user builds and clicks through it. Four real-test
-rounds so far (2026-08-23). Not yet re-verified after this round -- in
-particular `enable: (refVar)` in the `.u.yaml` (an unverified truthy-test
-on a Variable-type option, carried over unconfirmed since round 2) and
-whether the translations actually apply when switching jamovi's language.
+validated when the user builds and clicks through it. Five real-test
+rounds so far (2026-08-23). `enable: (refVar)` and the translations are
+now confirmed working. Open: dropping a factor variable into "Reference
+variable" throws an error -- cause not yet diagnosed, waiting on the exact
+error text (see `task_plan.md`).
 
 ## Build
 

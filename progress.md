@@ -131,3 +131,37 @@
   especialmente el layout "Pairs" (la pieza arquitectónicamente más
   compleja de este round) y el heatmap en modo referencia, ninguno de
   los dos probado en jamovi real todavía.
+
+## 2026-08-23 (ronda 5 — confirmaciones, i18n dinámico, estética scatter/heatmap)
+- Confirmado por el usuario: `enable: (refVar)` funciona, y las
+  traducciones funcionan. Ambos pendientes cerrados.
+- Bug nuevo sin diagnosticar: añadir un factor a "Reference variable" da
+  error. No tengo el texto exacto — pedido al usuario, no adiviné un fix.
+- Hallazgo importante investigando el pedido de traducir "Pearson's r":
+  `jmvcore::Analysis` tiene un método público `self$translate(text)` que
+  lee el MISMO `inst/i18n/<lang>.json` ya generado desde
+  `jamovi/i18n/*.po` (confirmado leyendo el código fuente real de
+  jmvcore instalado: `Options$translate`/`createTranslator`). Un solo
+  catálogo sirve para yaml Y para strings generados en R. Aplicado a
+  `methodLabel()` (columna stat de las tablas, leyenda del heatmap) y al
+  título dinámico de tableRefVsRest. Añadidas las entradas que faltaban
+  a es.po/ca.po.
+- Alineación de anotaciones: hjust ajustado (0→0.02 en scatter anotado,
+  -0.1→0.05 en matriz) para que no queden pegadas/fuera del eje.
+- Recorte del eje Y: la banda de predicción puede extenderse muy por
+  debajo del rango real de los datos (verificado con ejemplo standalone:
+  datos en [0,30], banda hasta -13) arrastrando el eje con ella.
+  Cambiado a `coord_cartesian(ylim=...)` calculado sobre los DATOS, con
+  margen inferior 5% y superior 15% (para la anotación) — resuelve a la
+  vez "eje 0 muy alto con espacio en blanco" y "aumenta la escala para
+  la leyenda". Verificado antes/después con PNG standalone.
+- Color fijo en scatters (ya no derivado del tema de jamovi): puntos
+  azul claro `#5DADE2`, línea y ejes negros. Aplicado a scatter anotado
+  y matriz de scatters.
+- Heatmap: fuente de la leyenda reducida (8/7pt) y barra de color
+  ensanchada (`guide_colorbar` 5cm de ancho). Verificado con PNG
+  standalone.
+- Pendiente: texto exacto del error de refVar+factor (bloqueante para
+  ese punto); confirmar en jamovi real el layout "Pairs", el heatmap en
+  modo referencia, el recorte de eje Y con datos reales, y la estética
+  del heatmap a tamaños reales de panel.
