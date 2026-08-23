@@ -10,17 +10,21 @@ A jamovi module that clones `jmv::corrMatrix`, redesigned for cleaner output:
   comparison, restyled) and an optional "Reference variable" box — set it
   and the analysis switches to comparing it against the rest of Variables,
   no separate mode switch to keep in sync.
-- **Annotated scatterplot(s)**: r, its CI and the fitted regression line
-  printed on the plot itself, in the style of `jamovi-jmvplus`'s `scat`
-  analysis, plus optional marginal densities. With more than two Variables
-  (and no reference variable), a scatterplot matrix instead of a single
-  plot.
+- **Annotated scatterplot(s)**: r, p, the fitted regression line and its
+  equation are each independently toggleable, left-aligned in the plot's
+  corner annotation. With more than two Variables and no reference
+  variable, a Layout choice: **Matrix** (small panels, one per pair) or
+  **Pairs** (one full-sized annotated scatter per pair, an array -- the
+  same shape a reference variable's comparisons already used).
 - **Colour-coded heatmap**, its own toggle independent of the scatterplot
   option -- both can be shown at once -- for the all-vs-all overview with
-  more than two variables (instead of jmv's plain-text matrix plot). Its
-  coefficient (Pearson/Spearman/Kendall) is independently selectable, and
-  a "Details" toggle adds each cell's CI/p/N/significance flag, reusing
-  the table's own ci/sig/n/flag options instead of adding one per stat.
+  more than two variables (instead of jmv's plain-text matrix plot), or a
+  single column against the reference variable when one is set. Square
+  cells (`coord_fixed()`) with the colour legend moved below rather than
+  eating into them. Its coefficient (Pearson/Spearman/Kendall) is
+  independently selectable, and a "Details" toggle adds each cell's
+  CI/p/N/significance flag, reusing the table's own ci/sig/n/flag options
+  instead of adding one per stat.
 - **95% CI** for Pearson (exact, from `cor.test`), and for Spearman/Kendall
   via the Fisher z-transform with the Fieller, Hartley & Pearson (1957)
   variance correction (`Var(z) = 0.437/(n-4)`) — base R's `cor.test` has no
@@ -41,15 +45,16 @@ Builds and installs cleanly on the user's machine (desktop + Docker, via
 broken/mismatched jmvtools/node toolchain and could never run the build
 itself (see `jamovi_build_toolchain` memory / `progress.md`). `R/corrCompute.R`
 (the pure statistics layer) is unit-tested against base R's `cor.test` and
-hand-derived formulas — see `corrInspect/tests/testthat/`. Three real-test
-rounds so far (2026-08-23): mode selector removed in favour of Variables +
-optional Reference variable, scatterplot vs. heatmap split into two
-independent toggles/Images (a genuine bug -- they couldn't both show at
-once before), heatmap's coefficient made selectable, and i18n added. Not
-yet re-verified in a real jamovi after this round -- in particular
-`enable: (refVar)` in the `.u.yaml` (an unverified truthy-test on a
-Variable-type option) and whether the translations actually apply when
-switching jamovi's language.
+hand-derived formulas — see `corrInspect/tests/testthat/`. New ggplot2/
+gridExtra plot compositions (the scatterplot matrix, the square heatmap
+with a bottom legend, the left-aligned annotation) are rendered to a plain
+PNG standalone before being wired into the module, to catch composition
+bugs before jamovi-specific ones -- but the module itself still only gets
+validated when the user builds and clicks through it. Four real-test
+rounds so far (2026-08-23). Not yet re-verified after this round -- in
+particular `enable: (refVar)` in the `.u.yaml` (an unverified truthy-test
+on a Variable-type option, carried over unconfirmed since round 2) and
+whether the translations actually apply when switching jamovi's language.
 
 ## Build
 

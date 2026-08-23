@@ -86,7 +86,11 @@ test_that("pText formats p-values compactly", {
     expect_equal(pText(NA), "")
 })
 
-test_that("ciText formats bounds to 3 decimals, matching r, or blanks out NA", {
+test_that("ciText formats bounds to 3 decimals by default, matching r, or blanks out NA", {
     expect_equal(ciText(0.2114, 0.6543), "[0.211, 0.654]")
     expect_equal(ciText(NA, 0.5), "")
+})
+
+test_that("ciText honours a custom decimals argument (heatmap details uses 2, matching its r)", {
+    expect_equal(ciText(0.2114, 0.6543, decimals = 2), "[0.21, 0.65]")
 })

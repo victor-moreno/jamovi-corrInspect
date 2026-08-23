@@ -31,10 +31,10 @@ starsFor <- function(p) {
     ''
 }
 
-ciText <- function(low, high) {
+ciText <- function(low, high, decimals = 3) {
     if (is.na(low) || is.na(high))
         return('')
-    sprintf('[%.3f, %.3f]', low, high)
+    sprintf('[%.*f, %.*f]', decimals, low, decimals, high)
 }
 
 # Compact p-value text for a heatmap cell (not jamovi's own pvalue format,

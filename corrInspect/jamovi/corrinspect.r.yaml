@@ -101,10 +101,14 @@ items:
       clearWith:
           - vars
           - refVar
+          - plots
+          - plotsFormat
+          - plotR
+          - plotLine
+          - plotEquation
+          - sig
           - ci
           - ciWidth
-          - plots
-          - plotDens
 
     - name: plotHeatmap
       title: Correlation heatmap
@@ -125,22 +129,25 @@ items:
           - ci
           - ciWidth
 
-    - name: plotRefVsRest
+    - name: plotPairs
       title: Scatterplots
       type: Array
       visible: false
       template:
           type: Image
-          renderFun: .plotRefVsRest
+          renderFun: .plotPairs
           requiresData: true
       clearWith:
           - refVar
           - vars
           - refAxis
-          - pearson
+          - plots
+          - plotsFormat
+          - plotR
+          - plotLine
+          - plotEquation
+          - sig
           - ci
           - ciWidth
-          - plots
-          - plotDens
 
 ...

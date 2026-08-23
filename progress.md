@@ -96,3 +96,38 @@
 - Pendiente: reconstruir y confirmar en jamovi real, especialmente
   `enable: (refVar)` (arrastrado sin verificar desde la ronda 2) y que
   las traducciones se apliquen correctamente al cambiar idioma.
+
+## 2026-08-23 (ronda 4 — layout pares/matrix, toggles del scatter, heatmap en modo referencia)
+- Unificado el Array `plotRefVsRest` con el nuevo caso "pares" de
+  allVsAll en un solo `plotPairs`, renombrado renderFun a `.plotPairs`;
+  decide modo referencia vs. pares por si la key del item contiene "|".
+  Nueva opción `plotsFormat` (matrix/pairs, default matrix) para elegir
+  el layout cuando hay >2 variables sin referencia.
+- 3 opciones nuevas para el scatter anotado: `plotR`, `plotLine`,
+  `plotEquation` (todas Bool, default TRUE). Reutilizado `sig` (ya
+  existente) para el toggle de p en el scatter, en vez de duplicar.
+  Aplican a cualquier scatter anotado (2 vars, pares, o referencia).
+- Alineación del texto de anotación: `hjust=-0.05` → `hjust=0`
+  (izquierda real). Verificado visualmente (PNG standalone) antes de
+  integrar.
+- Opción `plotDens` eliminada por completo (a.yaml/u.yaml/r.yaml/b.R) a
+  petición directa del usuario — no investigué por qué "no funcionaba",
+  solo la quité.
+- `.heatmap()` ahora soporta modo referencia: columna única (var1=refVar,
+  n filas = restVars) en vez de matriz n×n. `.plotHeatmap` y
+  `.updateVisibility` ya no excluyen refMode.
+- Heatmap: `coord_fixed()` (celdas cuadradas garantizadas pase lo que
+  pase con el ancho de la leyenda) + `theme(legend.position='bottom')` +
+  imagen +90px de alto. Verificado visualmente (n×n y columna única)
+  con PNG standalone antes de integrar.
+- `ciText()` acepta ahora `decimals` (default 3); heatmap details usa
+  `decimals=2` para que el IC coincida con los 2 decimales que ya usa
+  el heatmap para r (tabla y scatter siguen en 3, sin cambios ahí).
+- i18n: quitadas entradas de "Densities for variables" y "Plot" (Label
+  genérico ya no usado); añadidas "Layout"/"Matrix"/"Pairs"/"Regression
+  line"/"Line equation" en es.po y ca.po.
+- Pendiente: todo lo de rondas 2-3 sin confirmar sigue sin confirmar
+  (`enable: (refVar)`, traducciones), más lo nuevo de esta ronda —
+  especialmente el layout "Pairs" (la pieza arquitectónicamente más
+  compleja de este round) y el heatmap en modo referencia, ninguno de
+  los dos probado en jamovi real todavía.

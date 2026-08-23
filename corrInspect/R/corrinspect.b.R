@@ -30,6 +30,13 @@ corrInspectClass <- R6::R6Class(
             setdiff(self$options$vars, refVar)
         },
 
+        # >2 variables, all-vs-all, "Pairs" layout chosen for Scatterplots.
+        .pairsFormat = function() {
+            !private$.isRefMode() &&
+                length(self$options$vars) > 2 &&
+                identical(self$options$plotsFormat, 'pairs')
+        },
+
         # ---- structure (must exist by the end of .init(), see jamovi-skill) ----
 
         .initTable = function() {
@@ -55,16 +62,30 @@ corrInspectClass <- R6::R6Class(
         },
 
         .initPlots = function() {
-            n <- length(self$options$vars)
+            vars <- self$options$vars
+            n <- length(vars)
+            refMode <- private$.isRefMode()
+
             scatterSide <- if (n <= 2) 500 else max(500, 160 * n)
             self$results$plotScatter$setSize(scatterSide, scatterSide * 0.8)
-            heatmapSide <- max(400, 90 * n)
-            self$results$plotHeatmap$setSize(heatmapSide, heatmapSide)
 
-            if (private$.isRefMode()) {
-                array <- self$results$plotRefVsRest
+            if (refMode) {
+                restN <- length(private$.restVars())
+                self$results$plotHeatmap$setSize(260, max(300, 70 * restN) + 90)
+            } else {
+                heatmapSide <- max(400, 90 * n)
+                self$results$plotHeatmap$setSize(heatmapSide, heatmapSide + 90)
+            }
+
+            array <- self$results$plotPairs
+            if (refMode) {
                 for (v in private$.restVars()) {
                     item <- array$addItem(key = v)
+                    item$setSize(450, 350)
+                }
+            } else if (private$.pairsFormat()) {
+                for (pair in private$.pairs(vars)) {
+                    item <- array$addItem(key = paste(pair[1], pair[2], sep = '|'))
                     item$setSize(450, 350)
                 }
             }
@@ -140,21 +161,28 @@ corrInspectClass <- R6::R6Class(
         .updateVisibility = function() {
             refMode <- private$.isRefMode()
             vars <- self$options$vars
-            hasVars <- !refMode && length(vars) >= 2
+            n <- length(vars)
+            hasVars <- !refMode && n >= 2
+            showPlots <- isTRUE(self$options$plots)
+
+            showMatrix <- hasVars && showPlots && (n == 2 || !private$.pairsFormat())
+            showPairs <- showPlots && (refMode || (hasVars && private$.pairsFormat()))
+            showHeatmap <- isTRUE(self$options$heatmap) && (
+                (hasVars && n > 2) || (refMode && length(private$.restVars()) >= 1))
 
             self$results$tableAllVsAll$setVisible(!refMode)
             self$results$tableRefVsRest$setVisible(refMode)
-            self$results$plotScatter$setVisible(hasVars && isTRUE(self$options$plots))
-            self$results$plotHeatmap$setVisible(
-                hasVars && length(vars) > 2 && isTRUE(self$options$heatmap))
-            self$results$plotRefVsRest$setVisible(refMode && isTRUE(self$options$plots))
+            self$results$plotScatter$setVisible(showMatrix)
+            self$results$plotPairs$setVisible(showPairs)
+            self$results$plotHeatmap$setVisible(showHeatmap)
         },
 
         # ---- plots ----
 
         # "Scatterplots" and "Correlation heatmap" are independent toggles
-        # (both, either, or neither can be showing at once) -- not one plot
-        # auto-switching shape on variable count.
+        # (both, either, or neither can be showing at once). With more than
+        # two Variables and no reference variable, "Scatterplots" itself has
+        # a Layout choice: Matrix (this Image) or Pairs (plotPairs, below).
         .plotScatter = function(image, ggtheme, theme, ...) {
             if (private$.isRefMode() || !isTRUE(self$options$plots))
                 return(FALSE)
@@ -165,16 +193,22 @@ corrInspectClass <- R6::R6Class(
 
             if (length(vars) == 2)
                 return(private$.drawAnnotatedScatter(vars[1], vars[2], ggtheme, theme))
+            if (private$.pairsFormat())
+                return(FALSE)
             private$.drawScatterMatrix(vars, ggtheme, theme)
         },
 
         .plotHeatmap = function(image, ggtheme, theme, ...) {
-            if (private$.isRefMode() || !isTRUE(self$options$heatmap))
+            if (!isTRUE(self$options$heatmap))
                 return(FALSE)
 
             vars <- self$options$vars
-            if (length(vars) <= 2)
+            if (private$.isRefMode()) {
+                if (length(private$.restVars()) == 0)
+                    return(FALSE)
+            } else if (length(vars) <= 2) {
                 return(FALSE)
+            }
 
             p <- private$.heatmap(vars, ggtheme, theme)
             if (is.null(p))
@@ -183,26 +217,35 @@ corrInspectClass <- R6::R6Class(
             TRUE
         },
 
-        .plotRefVsRest = function(image, ggtheme, theme, ...) {
-            if (!private$.isRefMode() || !isTRUE(self$options$plots))
+        # one annotated scatter per item: the reference-variable comparisons
+        # (key = the compared variable) or, in "Pairs" layout, every pair
+        # among Variables (key = "var1|var2").
+        .plotPairs = function(image, ggtheme, theme, ...) {
+            if (!isTRUE(self$options$plots))
+                return(FALSE)
+            key <- image$key
+            if (length(key) == 0)
                 return(FALSE)
 
-            refVar <- self$options$refVar
-            v <- image$key
-            if (length(refVar) == 0 || length(v) == 0)
-                return(FALSE)
+            if (private$.isRefMode()) {
+                refVar <- self$options$refVar
+                if (self$options$refAxis == 'x')
+                    return(private$.drawAnnotatedScatter(refVar, key, ggtheme, theme))
+                return(private$.drawAnnotatedScatter(key, refVar, ggtheme, theme))
+            }
 
-            if (self$options$refAxis == 'x')
-                return(private$.drawAnnotatedScatter(refVar, v, ggtheme, theme))
-            private$.drawAnnotatedScatter(v, refVar, ggtheme, theme)
+            pair <- strsplit(key, '|', fixed = TRUE)[[1]]
+            if (length(pair) != 2)
+                return(FALSE)
+            private$.drawAnnotatedScatter(pair[1], pair[2], ggtheme, theme)
         },
 
-        # a scatter with an lm fit, its prediction band, and an r/CI/equation
-        # annotation -- the same idea as jamovi-jmvplus's scat.b.R, built from
-        # scratch here since this module doesn't wrap scatr::scat. Draws
-        # straight to the active device and returns TRUE/FALSE, so the
-        # optional marginal densities (composed with gridExtra, since ggExtra
-        # isn't in this module's dependencies) can be laid out around it.
+        # a scatter with an optional lm fit + prediction band, and an
+        # optional r/p/CI/equation annotation -- the same idea as
+        # jamovi-jmvplus's scat.b.R, built from scratch here since this
+        # module doesn't wrap scatr::scat. Always Pearson, regardless of
+        # which coefficients are ticked above (a linear fit pairs with
+        # Pearson's r, not a rank correlation).
         .drawAnnotatedScatter = function(xvar, yvar, ggtheme, theme) {
             data <- self$data
             x <- jmvcore::toNumeric(data[[xvar]])
@@ -214,64 +257,61 @@ corrInspectClass <- R6::R6Class(
                 return(FALSE)
 
             df <- data.frame(x = x, y = y)
-            fit <- stats::lm(y ~ x, data = df)
-            grid <- data.frame(x = seq(min(x), max(x), length.out = 100))
-            pred <- stats::predict(fit, newdata = grid, interval = 'prediction')
-            ribbon <- cbind(grid, as.data.frame(pred[, c('lwr', 'upr'), drop = FALSE]))
+            fit <- corrFit(x, y, 'pearson', 'two.sided', self$options$ciWidth)
+            lmFit <- stats::lm(y ~ x, data = df)
+            coefv <- stats::coef(lmFit)
 
-            r <- stats::cor(x, y)
-            coefv <- stats::coef(fit)
-            label <- sprintf('r = %.3f\n%s = %.3g + %.3g·%s',
-                              r, yvar, coefv[1], coefv[2], xvar)
-
-            if (isTRUE(self$options$ci)) {
-                m <- corrFit(x, y, 'pearson', 'two.sided', self$options$ciWidth)
-                if (!is.na(m$ciLow)) {
-                    label <- paste0(label, sprintf('\n%s%% CI %s',
-                                                    self$options$ciWidth,
-                                                    ciText(m$ciLow, m$ciHigh)))
-                }
+            lines <- character(0)
+            if (isTRUE(self$options$plotR))
+                lines <- c(lines, sprintf('r = %.3f', fit$r))
+            if (isTRUE(self$options$sig) && !is.na(fit$p))
+                lines <- c(lines, pText(fit$p))
+            if (isTRUE(self$options$plotEquation)) {
+                lines <- c(lines, sprintf('%s = %.3g + %.3g·%s',
+                                           yvar, coefv[1], coefv[2], xvar))
             }
+            if (isTRUE(self$options$ci) && !is.na(fit$ciLow)) {
+                lines <- c(lines, sprintf('%s%% CI %s', self$options$ciWidth,
+                                           ciText(fit$ciLow, fit$ciHigh)))
+            }
+            label <- paste(lines, collapse = '\n')
 
             textColour <- ggplot2::calc_element('text', themeOnly(ggtheme))$colour
             pointColour <- if (!is.null(theme$color)) theme$color[1] else '#3366CC'
             fillColour <- if (!is.null(theme$fill)) theme$fill[1] else '#3366CC'
 
-            p <- ggplot2::ggplot(df, ggplot2::aes(x = x, y = y)) +
-                ggplot2::geom_ribbon(data = ribbon,
-                                      mapping = ggplot2::aes(x = x, ymin = lwr, ymax = upr),
-                                      inherit.aes = FALSE, fill = fillColour, alpha = 0.25) +
-                ggplot2::geom_point(colour = pointColour, alpha = 0.7) +
-                ggplot2::geom_smooth(method = 'lm', formula = y ~ x, se = FALSE,
-                                      colour = pointColour) +
-                ggplot2::annotate('text', x = -Inf, y = Inf, hjust = -0.05, vjust = 1.3,
-                                   label = label, colour = textColour, size = 3.6) +
-                ggplot2::labs(x = xvar, y = yvar) +
-                ggtheme
+            p <- ggplot2::ggplot(df, ggplot2::aes(x = x, y = y))
 
-            if (!isTRUE(self$options$plotDens)) {
-                print(p)
-                return(TRUE)
+            if (isTRUE(self$options$plotLine)) {
+                grid <- data.frame(x = seq(min(x), max(x), length.out = 100))
+                pred <- stats::predict(lmFit, newdata = grid, interval = 'prediction')
+                ribbon <- cbind(grid, as.data.frame(pred[, c('lwr', 'upr'), drop = FALSE]))
+                p <- p + ggplot2::geom_ribbon(
+                    data = ribbon, mapping = ggplot2::aes(x = x, ymin = lwr, ymax = upr),
+                    inherit.aes = FALSE, fill = fillColour, alpha = 0.25)
             }
 
-            xDens <- ggplot2::ggplot(df, ggplot2::aes(x = x)) +
-                ggplot2::geom_density(fill = fillColour, colour = NA) +
-                ggplot2::theme_void()
-            yDens <- ggplot2::ggplot(df, ggplot2::aes(x = y)) +
-                ggplot2::geom_density(fill = fillColour, colour = NA) +
-                ggplot2::coord_flip() +
-                ggplot2::theme_void()
-            blank <- ggplot2::ggplot() + ggplot2::theme_void()
+            p <- p + ggplot2::geom_point(colour = pointColour, alpha = 0.7)
 
-            gridExtra::grid.arrange(xDens, blank, p, yDens,
-                                     ncol = 2, nrow = 2,
-                                     widths = c(4, 1), heights = c(1, 4))
+            if (isTRUE(self$options$plotLine)) {
+                p <- p + ggplot2::geom_smooth(method = 'lm', formula = y ~ x, se = FALSE,
+                                               colour = pointColour)
+            }
+
+            if (nzchar(label)) {
+                p <- p + ggplot2::annotate('text', x = -Inf, y = Inf, hjust = 0, vjust = 1.3,
+                                            label = label, colour = textColour, size = 3.6)
+            }
+
+            p <- p + ggplot2::labs(x = xvar, y = yvar) + ggtheme
+
+            print(p)
             TRUE
         },
 
-        # scatterplot matrix for >2 variables: lower triangle = mini scatter
-        # + lm line + r per pair, diagonal = variable name, upper triangle
-        # blank. No marginal densities here -- panels are too small for it.
+        # scatterplot matrix for >2 variables ("Matrix" layout): lower
+        # triangle = mini scatter + lm line + r per pair, diagonal =
+        # variable name, upper triangle blank.
         .drawScatterMatrix = function(vars, ggtheme, theme) {
             data <- self$data
             n <- length(vars)
@@ -319,18 +359,27 @@ corrInspectClass <- R6::R6Class(
             TRUE
         },
 
-        # all-vs-all overview for >2 variables: a colour-coded heatmap instead
-        # of jmv's plain-text matrix. Coefficient and detail level are their
-        # own options (heatmapMethod/heatmapDetails), independent of which
-        # methods are ticked in the table above.
+        # colour-coded heatmap instead of jmv's plain-text matrix. All-vs-all
+        # (n x n) with no reference variable, or a single column against the
+        # reference variable when one is set. Coefficient and detail level
+        # are their own options (heatmapMethod/heatmapDetails), independent
+        # of which methods are ticked in the table above. coord_fixed() plus
+        # a bottom legend keep the cells square regardless of variable count.
         .heatmap = function(vars, ggtheme, theme) {
             data <- self$data
             method <- self$options$heatmapMethod
             alternative <- hypothesisAlternative(self$options$hypothesis)
             ciWidth <- self$options$ciWidth
             details <- isTRUE(self$options$heatmapDetails)
+            refMode <- private$.isRefMode()
 
-            pairs <- private$.pairs(vars)
+            if (refMode) {
+                refVar <- self$options$refVar
+                pairs <- lapply(private$.restVars(), function(v) c(refVar, v))
+            } else {
+                pairs <- private$.pairs(vars)
+            }
+
             rows <- lapply(pairs, function(pair) {
                 x <- jmvcore::toNumeric(data[[pair[1]]])
                 y <- jmvcore::toNumeric(data[[pair[2]]])
@@ -340,15 +389,21 @@ corrInspectClass <- R6::R6Class(
                            stringsAsFactors = FALSE)
             })
             long <- do.call(rbind, rows)
-            full <- rbind(
-                long,
-                data.frame(var1 = long$var2, var2 = long$var1, r = long$r,
-                           label = long$label, stringsAsFactors = FALSE),
-                data.frame(var1 = vars, var2 = vars, r = 1, label = '1.00',
-                           stringsAsFactors = FALSE))
 
-            full$var1 <- factor(full$var1, levels = vars)
-            full$var2 <- factor(full$var2, levels = rev(vars))
+            if (refMode) {
+                full <- long
+                full$var1 <- factor(full$var1, levels = self$options$refVar)
+                full$var2 <- factor(full$var2, levels = rev(private$.restVars()))
+            } else {
+                full <- rbind(
+                    long,
+                    data.frame(var1 = long$var2, var2 = long$var1, r = long$r,
+                               label = long$label, stringsAsFactors = FALSE),
+                    data.frame(var1 = vars, var2 = vars, r = 1, label = '1.00',
+                               stringsAsFactors = FALSE))
+                full$var1 <- factor(full$var1, levels = vars)
+                full$var2 <- factor(full$var2, levels = rev(vars))
+            }
 
             textColour <- ggplot2::calc_element('text', themeOnly(ggtheme))$colour
             textSize <- if (details) 2.4 else 3.2
@@ -358,13 +413,17 @@ corrInspectClass <- R6::R6Class(
                 ggplot2::geom_text(ggplot2::aes(label = label), colour = textColour, size = textSize) +
                 ggplot2::scale_fill_gradient2(low = '#B2182B', mid = 'white', high = '#2166AC',
                                                midpoint = 0, limits = c(-1, 1)) +
+                ggplot2::coord_fixed() +
                 ggplot2::labs(x = NULL, y = NULL, fill = methodLabel(method)) +
-                themeOnly(ggtheme)
+                themeOnly(ggtheme) +
+                ggplot2::theme(legend.position = 'bottom')
         },
 
         # r (with a significance flag, if on) on its own line; CI/p/N appended
         # below it only when Details is on, and only for whichever of those
-        # are already switched on in the table's own options.
+        # are already switched on in the table's own options. CI uses 2
+        # decimals here, matching r's own 2-decimal display in the heatmap
+        # (the table and scatterplot annotation use 3, matching r there).
         .heatmapCellLabel = function(fit, details) {
             line1 <- sprintf('%.2f', fit$r)
             if (isTRUE(self$options$flag))
@@ -374,7 +433,7 @@ corrInspectClass <- R6::R6Class(
 
             lines <- line1
             if (isTRUE(self$options$ci) && !is.na(fit$ciLow))
-                lines <- c(lines, ciText(fit$ciLow, fit$ciHigh))
+                lines <- c(lines, ciText(fit$ciLow, fit$ciHigh, decimals = 2))
             if (isTRUE(self$options$sig) && !is.na(fit$p))
                 lines <- c(lines, pText(fit$p))
             if (isTRUE(self$options$n))

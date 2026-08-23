@@ -224,19 +224,77 @@ la Ronda 2 y esta) pero quedó desactualizado otra vez tras añadir
 heatmapMethod/heatmapDetails — dejado fuera de git de nuevo, se
 regenerará en el próximo build.
 
+## Ronda 4 (2026-08-23): scatterplots pairs/matrix, toggles del scatter, heatmap en modo referencia
+Pedido del usuario (denso, una sola frase por punto):
+
+1. "Sub-opción para mostrar en formato matrix... o formato pares (como
+   sale para referencia), generando todos los pares si no hay referencia."
+   → nueva opción `plotsFormat` (List: matrix/pairs, default matrix),
+   relevante con >2 variables y sin refVar. Arquitectura: unifiqué el
+   Array que antes era solo `plotRefVsRest` (una por variable comparada
+   en modo referencia) con el nuevo caso "pares" de allVsAll (una por
+   cada par, key="var1|var2") en un único Array `plotPairs` — el
+   renderFun `.plotPairs` decide por el formato de la key (con o sin
+   "|") si está en modo referencia o en modo pares. Evita duplicar la
+   lógica del scatter anotado en dos sitios.
+2. "En formato pares, opciones para mostrar: r, p, recta, ecuación de la
+   recta." → 3 opciones nuevas (`plotR`, `plotLine`, `plotEquation`,
+   todas Bool default TRUE = comportamiento actual sin cambios visibles
+   si no se tocan) + reutilizado `sig` (ya existente, "Report p-value")
+   para el toggle de p — mismo patrón de reutilización que
+   heatmapDetails en la ronda anterior. Aplican a CUALQUIER scatter
+   anotado (2 vars, pares, o modo referencia), no solo al nuevo formato
+   "pairs".
+3. "Alinea el inicio de r y ecuación." → `hjust=-0.05` (valor un poco
+   arbitrario) → `hjust=0` (alineación a la izquierda real). Verificado
+   visualmente con un PNG standalone antes de integrar.
+4. "Elimina densities, no funciona y no hace falta." → opción `plotDens`
+   eliminada por completo (a.yaml, u.yaml, r.yaml clearWith, y la rama
+   de `gridExtra::grid.arrange` con marginal densities en
+   `.drawAnnotatedScatter`). No investigué la causa raíz del "no
+   funciona" — el usuario pidió quitarla directamente, no arreglarla.
+5. "El heatmap también con una columna para modo referencia." → `.heatmap()`
+   ahora soporta refMode: en vez de matriz n×n, genera pairs =
+   (refVar, v) para cada v en restVars → una sola columna (var1=refVar),
+   n filas. Mismo `heatmapMethod`/`heatmapDetails`. `.plotHeatmap` y
+   `.updateVisibility` ya no excluyen refMode.
+6. "En modo matrix, aspecto cuadrado del heatmap; la leyenda quita
+   espacio, ponla fuera o amplía el tamaño." → añadido
+   `ggplot2::coord_fixed()` (celdas cuadradas garantizadas
+   independientemente del ancho que ocupe la leyenda) +
+   `theme(legend.position='bottom')` (libera espacio horizontal) +
+   tamaño de imagen ajustado (+90px de alto para la leyenda). Verificado
+   visualmente con PNG standalone (n×n y columna única) antes de
+   integrar — ver capturas en la conversación.
+7. "En details de heatmap, IC95% a 2 decimales como r." → `ciText()`
+   ahora acepta `decimals` (default 3, sin cambiar tabla/scatter);
+   `.heatmapCellLabel()` llama `ciText(..., decimals=2)` para que
+   coincida con el `%.2f` que ya usa el heatmap para r.
+
+i18n actualizado: quitadas las entradas de "Densities for variables" y
+"Plot" (Label genérico, sustituido por "Scatterplots"/"Correlation
+heatmap" como Labels propios, que ya tenían entrada); añadidas "Layout",
+"Matrix", "Pairs", "Regression line", "Line equation" en es.po/ca.po.
+
+`R/corrinspect.h.R` sigue sin trackear (gitignored desde la ronda 3);
+seguirá reapareciendo/desapareciendo con cada build del usuario, es
+esperado.
+
 ## Next Step
 El usuario reconstruye (`bash tools/install.sh`) y prueba de nuevo.
-Puntos concretos a verificar:
-- que `enable: (refVar)` compile (sintaxis no probada en compilador real
-  para un option tipo Variable en vez de Bool/List) — arrastrado de la
-  Ronda 2, sigue sin confirmar.
-- que las traducciones es.po/ca.po realmente se apliquen cambiando el
-  idioma de jamovi (nunca se ha probado un .po de este módulo en jamovi
-  real).
-- que plotScatter y plotHeatmap puedan mostrarse simultáneamente (el
-  punto que antes era imposible).
-- heatmapMethod/heatmapDetails con distintos datasets.
-- que plotDens ahora sí se vea con 2 variables o en modo ref-vs-resto.
-- que el heatmap solo aparezca al marcar la nueva casilla "Correlation
-  heatmap", no automáticamente.
+Puntos concretos a verificar, de más a menos arrastrados de rondas
+anteriores:
+- `enable: (refVar)` — sin confirmar desde la Ronda 2.
+- traducciones es.po/ca.po aplicándose de verdad al cambiar idioma —
+  sin confirmar desde la Ronda 3.
+- Layout "Pairs" con >2 variables sin referencia: que genere todos los
+  pares correctamente (nuevo este round, la parte más compleja
+  arquitectónicamente).
+- heatmap en modo referencia (columna única) — nuevo, sin probar en
+  jamovi real.
+- aspecto cuadrado + leyenda abajo del heatmap — verificado solo
+  standalone, no dentro del panel real de jamovi (tamaños de imagen,
+  fuentes, puede verse distinto).
+- que plotR/plotLine/plotEquation realmente cambien el plot al
+  desmarcarlos (guardas simples, riesgo bajo, pero no probado en vivo).
 - IC95% de Spearman/Kendall: valores razonables, no solo que "aparezcan".

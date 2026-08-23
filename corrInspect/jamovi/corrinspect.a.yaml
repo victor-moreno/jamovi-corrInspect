@@ -117,6 +117,7 @@ options:
       type: Bool
       default: true
       description:
+          ui: shown in the table, and (with Scatterplots on) in each scatterplot's annotation.
           R: '`TRUE` (default) or `FALSE`, provide a p-value for each correlation'
 
     - name: flag
@@ -155,21 +156,55 @@ options:
       default: false
       description:
           ui: >
-              with two Variables (or a reference variable), an annotated
-              scatterplot. With more than two Variables and no reference
-              variable, a scatterplot matrix (one small panel per pair).
+              with two Variables, or a reference variable, an annotated
+              scatterplot (or one per comparison, with a reference
+              variable). With more than two Variables and no reference
+              variable, either a matrix or one scatterplot per pair --
+              see Layout below.
           R: '`TRUE` or `FALSE` (default), provide annotated scatterplot(s)'
 
-    - name: plotDens
-      title: Densities for variables
-      type: Bool
-      default: false
+    - name: plotsFormat
+      title: Layout
+      type: List
+      options:
+        - name: matrix
+          title: Matrix
+        - name: pairs
+          title: Pairs
+      default: matrix
       description:
           ui: >
-              add marginal densities to the single annotated scatterplot
-              (two variables, or the inspector scatterplots). Not shown on
-              the scatterplot matrix -- its panels are too small for it.
-          R: '`TRUE` or `FALSE` (default), add marginal densities to the scatterplot(s)'
+              with more than two Variables and no reference variable:
+              'Matrix' packs every pair into small panels of one plot;
+              'Pairs' gives each pair its own full-sized annotated
+              scatterplot, the same as with a reference variable.
+          R: >
+              `'matrix'` (default) or `'pairs'`, how scatterplots are laid
+              out for more than two variables with no reference variable
+
+    - name: plotR
+      title: r
+      type: Bool
+      default: true
+      description:
+          ui: show r in each scatterplot's annotation.
+          R: '`TRUE` (default) or `FALSE`, show r on the scatterplot(s)'
+
+    - name: plotLine
+      title: Regression line
+      type: Bool
+      default: true
+      description:
+          ui: draw the fitted regression line and its prediction band.
+          R: '`TRUE` (default) or `FALSE`, draw the regression line on the scatterplot(s)'
+
+    - name: plotEquation
+      title: Line equation
+      type: Bool
+      default: true
+      description:
+          ui: show the fitted line's equation in each scatterplot's annotation.
+          R: '`TRUE` (default) or `FALSE`, show the regression equation on the scatterplot(s)'
 
     - name: heatmap
       title: Correlation heatmap
@@ -177,11 +212,10 @@ options:
       default: false
       description:
           ui: >
-              a colour-coded heatmap of all pairwise correlations. Only
-              applies with no reference variable and more than two
-              Variables selected (with two, the scatterplot above already
-              shows that one pair; with a reference variable set, see the
-              inspector scatterplots instead).
+              a colour-coded heatmap of pairwise correlations: all
+              variables against all with no reference variable selected
+              (needs more than two Variables), or a single column against
+              the reference variable when one is set.
           R: '`TRUE` or `FALSE` (default), provide a correlation heatmap'
 
     - name: heatmapMethod

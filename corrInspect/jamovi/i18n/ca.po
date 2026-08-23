@@ -118,8 +118,24 @@ msgid "Scatterplots"
 msgstr "Diagrames de dispersió"
 
 #: jamovi/corrinspect.a.yaml
-msgid "Densities for variables"
-msgstr "Densitats de les variables"
+msgid "Layout"
+msgstr "Disposició"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Matrix"
+msgstr "Matriu"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Pairs"
+msgstr "Parells"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Regression line"
+msgstr "Recta de regressió"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Line equation"
+msgstr "Equació de la recta"
 
 #: jamovi/corrinspect.a.yaml
 msgid "Correlation heatmap"
@@ -140,10 +156,6 @@ msgstr "Coeficients de Correlació"
 #: jamovi/corrinspect.u.yaml
 msgid "Additional Options"
 msgstr "Opcions Addicionals"
-
-#: jamovi/corrinspect.u.yaml
-msgid "Plot"
-msgstr "Gràfic"
 
 #: jamovi/corrinspect.r.yaml
 msgid "Correlations"

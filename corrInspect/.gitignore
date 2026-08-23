@@ -12,3 +12,6 @@ Rplots.pdf
 # (see task_plan.md / jamovi_build_toolchain memory).
 R/corrinspect.h.R
 R/00jmv.R
+# jmvtools compiles jamovi/i18n/*.po into this on every build -- same
+# stale-file reasoning as above; jamovi/i18n/*.po is the real source.
+inst/i18n/

@@ -93,15 +93,39 @@ children:
                   name: hypothesis_neg
                   optionName: hypothesis
                   optionPart: neg
+
+    - type: LayoutBox
+      margin: large
+      style: inline
+      children:
           - type: Label
-            label: Plot
+            label: Scatterplots
             children:
                 - type: CheckBox
                   name: plots
                   children:
-                      - type: CheckBox
-                        name: plotDens
+                      - type: RadioButton
+                        name: plotsFormat_matrix
+                        optionName: plotsFormat
+                        optionPart: matrix
                         enable: (plots)
+                      - type: RadioButton
+                        name: plotsFormat_pairs
+                        optionName: plotsFormat
+                        optionPart: pairs
+                        enable: (plots)
+                      - type: CheckBox
+                        name: plotR
+                        enable: (plots)
+                      - type: CheckBox
+                        name: plotLine
+                        enable: (plots)
+                      - type: CheckBox
+                        name: plotEquation
+                        enable: (plots)
+          - type: Label
+            label: Correlation heatmap
+            children:
                 - type: CheckBox
                   name: heatmap
                   children:
