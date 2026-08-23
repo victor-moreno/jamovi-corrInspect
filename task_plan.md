@@ -167,11 +167,75 @@ Borrado `R/corrinspect.h.R` del repo (quedó obsoleto tras cambiar las
 opciones y no se pudo regenerar en este sandbox) — se regenera solo en el
 próximo `jmvtools::prepare()`/`install()` del usuario.
 
+## Ronda 3 (2026-08-23): diseño aprobado, feedback sobre plots/heatmap + i18n
+Usuario: "diseño ok, más simple y igual de funcional." Nuevo feedback:
+
+1. "Scatterplots no muestra ningún plot" → causa real encontrada: nunca
+   implementé NADA para `plots` cuando allVsAll tiene >2 variables (solo
+   heatmap existía ahí). El usuario casi seguro probó con >2 variables
+   (coincide con que "Heatmap sí" funcionaba a la vez). Fix: nueva
+   `.drawScatterMatrix()` — matriz de mini-scatters (triángulo inferior =
+   scatter+lm+r pequeño, diagonal = nombre de variable, triángulo superior
+   en blanco), construida con `gridExtra::grid.arrange(grobs=...)`.
+   Probado standalone (script en .tmp/, borrado) con mtcars antes de
+   integrar — funciona.
+2. Arquitectura de plots separada en DOS Image independientes en vez de
+   una sola con lógica mutuamente excluyente: `plotScatter` (gated por
+   `plots`: 2 vars → `.drawAnnotatedScatter`, >2 vars → `.drawScatterMatrix`)
+   y `plotHeatmap` (gated por `heatmap`, solo >2 vars). Antes compartían
+   un único `plotAllVsAll`, lo que hacía imposible mostrar ambos a la vez
+   aunque el usuario marcase las dos casillas — bug de diseño corregido.
+3. Heatmap mejorable:
+   - "solo Pearson, podría ser seleccionable" → nueva opción List
+     `heatmapMethod` (pearson/spearman/kendall, default pearson),
+     independiente de los checkboxes pearson/spearman/kendall de la tabla.
+     `.heatmap()` ahora usa `corrFit()` (antes `stats::cor()` a pelo,
+     ignorando el method seleccionado — bug real).
+   - "incluir además de r los otros valores... una opción (details)" →
+     nueva opción Bool `heatmapDetails`. Cuando está activa, cada celda
+     añade las líneas que correspondan de IC95%/p/N/flag, reutilizando
+     los checkboxes YA existentes (ci/sig/n/flag) — sin opciones nuevas
+     por cada estadístico, tal como pidió el usuario.
+4. Multilingüe: `jamovi/i18n/es.po` y `jamovi/i18n/ca.po` creados,
+   siguiendo el mismo formato/ubicación que `conttables2xK`
+   (jamovi-conttables-2xK/conttables2xK/jamovi/i18n/{es,ca}.po, revisado
+   como referencia — NO copiado, es el catálogo entero de jmv y no aplica
+   a un módulo nuevo). Traducidos: título/subtítulo del módulo,
+   descripción principal, todos los títulos de opciones y de ítems de
+   List, labels de agrupación del panel, títulos de tabla/columnas, título
+   de los plots (~35 msgid). Reutilicé el wording exacto de jmv donde ya
+   existía equivalente (p.ej. "Correlation Coefficients"→"Coeficientes de
+   Correlación", igual que corrMatrix/corrPart en su es.po) para
+   consistencia terminológica. NO traducidos (límite de alcance,
+   mencionado al usuario): los tooltips largos (`description.ui` en
+   a.yaml) y las cadenas generadas dinámicamente en R (título de
+   tableRefVsRest con el nombre de la variable, `methodLabel()`) — no
+   verifiqué el mecanismo de i18n del lado R (¿`jmvcore::.()`? no
+   confirmado) y no quise arriesgar el build por eso.
+   Las referencias `#:` de cada entrada apuntan al archivo yaml, no a la
+   ruta posicional exacta (`ui[N][...]`) que usa el catálogo real de jmv
+   — no tengo forma de verificar esos índices sin el compilador
+   funcionando, y el `msgid` (no el comentario `#:`) es lo que
+   determina la traducción en tiempo de ejecución, así que esto no
+   debería afectar a que funcione.
+
+`R/corrinspect.h.R` reapareció sin trackear (el usuario reconstruyó entre
+la Ronda 2 y esta) pero quedó desactualizado otra vez tras añadir
+heatmapMethod/heatmapDetails — dejado fuera de git de nuevo, se
+regenerará en el próximo build.
+
 ## Next Step
-El usuario reconstruye (`bash tools/install.sh`) y prueba de nuevo en
-jamovi real. Puntos concretos a verificar:
+El usuario reconstruye (`bash tools/install.sh`) y prueba de nuevo.
+Puntos concretos a verificar:
 - que `enable: (refVar)` compile (sintaxis no probada en compilador real
-  para un option tipo Variable en vez de Bool/List).
+  para un option tipo Variable en vez de Bool/List) — arrastrado de la
+  Ronda 2, sigue sin confirmar.
+- que las traducciones es.po/ca.po realmente se apliquen cambiando el
+  idioma de jamovi (nunca se ha probado un .po de este módulo en jamovi
+  real).
+- que plotScatter y plotHeatmap puedan mostrarse simultáneamente (el
+  punto que antes era imposible).
+- heatmapMethod/heatmapDetails con distintos datasets.
 - que plotDens ahora sí se vea con 2 variables o en modo ref-vs-resto.
 - que el heatmap solo aparezca al marcar la nueva casilla "Correlation
   heatmap", no automáticamente.

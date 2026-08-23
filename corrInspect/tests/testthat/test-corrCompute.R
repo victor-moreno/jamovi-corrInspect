@@ -80,6 +80,12 @@ test_that("starsFor matches conventional thresholds", {
     expect_equal(starsFor(NA), "")
 })
 
+test_that("pText formats p-values compactly", {
+    expect_equal(pText(0.0001), "p<.001")
+    expect_equal(pText(0.023), "p=0.023")
+    expect_equal(pText(NA), "")
+})
+
 test_that("ciText formats bounds to 3 decimals, matching r, or blanks out NA", {
     expect_equal(ciText(0.2114, 0.6543), "[0.211, 0.654]")
     expect_equal(ciText(NA, 0.5), "")

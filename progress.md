@@ -62,3 +62,37 @@
 - Pendiente: que el usuario reconstruya y confirme, en particular si
   `enable: (refVar)` en el .u.yaml compila (sintaxis no verificada para
   un option tipo Variable).
+
+## 2026-08-23 (ronda 3 — diseño aprobado + bugs de plots/heatmap + i18n)
+- Diseño de la ronda 2 confirmado por el usuario ("más simple y igual de
+  funcional").
+- Causa real de "Scatterplots no muestra ningún plot": nunca implementé
+  contenido para el caso allVsAll + >2 variables + plots (solo existía el
+  heatmap ahí). Nueva `.drawScatterMatrix()` (grid.arrange de mini-scatter
+  por par, triángulo inferior + diagonal con nombre de variable).
+  Verificado standalone con mtcars antes de integrar.
+- Separados `plotScatter` y `plotHeatmap` en dos Image independientes
+  (antes compartían un único `plotAllVsAll`, por lo que activar ambas
+  casillas a la vez era imposible aunque fueran opciones "independientes"
+  — bug de arquitectura, no solo de UI).
+- Heatmap: bug real encontrado — `.heatmap()` usaba `stats::cor()` a pelo
+  (siempre Pearson), ignorando qué coeficiente estuviera seleccionado.
+  Arreglado con nueva opción `heatmapMethod` (List) usando `corrFit()`.
+  Nueva opción `heatmapDetails` (Bool) añade IC95%/p/N/flag a cada celda,
+  reutilizando los checkboxes ya existentes de la tabla (ci/sig/n/flag)
+  en vez de opciones nuevas por estadístico, como pidió el usuario.
+- i18n: creados `jamovi/i18n/es.po` y `jamovi/i18n/ca.po` (mismo formato
+  y ubicación que conttables2xK, revisado como referencia). ~35 msgid
+  traducidos: título/subtítulo/descripción del módulo, todas las opciones
+  visibles, labels de agrupación, tabla/columnas, títulos de plots. Sin
+  traducir (alcance limitado, comunicado al usuario): tooltips largos y
+  cadenas generadas dinámicamente en R (no verifiqué el mecanismo de
+  i18n del lado R backend).
+- Limpiados `Rplots.pdf` sueltos (efecto secundario de mis pruebas
+  standalone con gridExtra) y añadidos a .gitignore en ambos niveles.
+- `R/corrinspect.h.R` reapareció sin trackear (el usuario reconstruyó
+  entre rondas) pero quedó obsoleto de nuevo tras las nuevas opciones —
+  dejado fuera de git otra vez.
+- Pendiente: reconstruir y confirmar en jamovi real, especialmente
+  `enable: (refVar)` (arrastrado sin verificar desde la ronda 2) y que
+  las traducciones se apliquen correctamente al cambiar idioma.

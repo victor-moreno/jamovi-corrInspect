@@ -154,6 +154,10 @@ options:
       type: Bool
       default: false
       description:
+          ui: >
+              with two Variables (or a reference variable), an annotated
+              scatterplot. With more than two Variables and no reference
+              variable, a scatterplot matrix (one small panel per pair).
           R: '`TRUE` or `FALSE` (default), provide annotated scatterplot(s)'
 
     - name: plotDens
@@ -161,6 +165,10 @@ options:
       type: Bool
       default: false
       description:
+          ui: >
+              add marginal densities to the single annotated scatterplot
+              (two variables, or the inspector scatterplots). Not shown on
+              the scatterplot matrix -- its panels are too small for it.
           R: '`TRUE` or `FALSE` (default), add marginal densities to the scatterplot(s)'
 
     - name: heatmap
@@ -175,5 +183,34 @@ options:
               shows that one pair; with a reference variable set, see the
               inspector scatterplots instead).
           R: '`TRUE` or `FALSE` (default), provide a correlation heatmap'
+
+    - name: heatmapMethod
+      title: Coefficient
+      type: List
+      options:
+        - name: pearson
+          title: Pearson
+        - name: spearman
+          title: Spearman
+        - name: kendall
+          title: Kendall's tau-b
+      default: pearson
+      description:
+          ui: which correlation coefficient the heatmap's colours and cell values are based on.
+          R: >
+              `'pearson'` (default), `'spearman'`, or `'kendall'`, which
+              coefficient the heatmap shows
+
+    - name: heatmapDetails
+      title: Details
+      type: Bool
+      default: false
+      description:
+          ui: >
+              show each cell's 95% CI / p-value / N / significance flag as
+              well as r, reusing whichever of those are already switched on
+              above (Confidence interval, Report p-value, N, Flag
+              significant correlations) instead of adding separate options.
+          R: '`TRUE` or `FALSE` (default), add CI/p/N/flag detail to each heatmap cell'
 
 ...

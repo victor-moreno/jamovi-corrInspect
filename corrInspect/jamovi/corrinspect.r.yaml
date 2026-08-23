@@ -92,23 +92,38 @@ items:
             type: text
             visible: (flag)
 
-    - name: plotAllVsAll
-      title: Scatterplot
+    - name: plotScatter
+      title: Scatterplot(s)
       type: Image
       visible: false
       requiresData: true
-      renderFun: .plotAllVsAll
+      renderFun: .plotScatter
       clearWith:
           - vars
           - refVar
-          - pearson
-          - spearman
-          - kendall
           - ci
           - ciWidth
           - plots
           - plotDens
+
+    - name: plotHeatmap
+      title: Correlation heatmap
+      type: Image
+      visible: false
+      requiresData: true
+      renderFun: .plotHeatmap
+      clearWith:
+          - vars
+          - refVar
           - heatmap
+          - heatmapMethod
+          - heatmapDetails
+          - hypothesis
+          - sig
+          - flag
+          - 'n'
+          - ci
+          - ciWidth
 
     - name: plotRefVsRest
       title: Scatterplots

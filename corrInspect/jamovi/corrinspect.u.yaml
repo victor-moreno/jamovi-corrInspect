@@ -104,3 +104,23 @@ children:
                         enable: (plots)
                 - type: CheckBox
                   name: heatmap
+                  children:
+                      - type: RadioButton
+                        name: heatmapMethod_pearson
+                        optionName: heatmapMethod
+                        optionPart: pearson
+                        enable: (heatmap)
+                      - type: RadioButton
+                        name: heatmapMethod_spearman
+                        optionName: heatmapMethod
+                        optionPart: spearman
+                        enable: (heatmap)
+                      - type: RadioButton
+                        name: heatmapMethod_kendall
+                        optionName: heatmapMethod
+                        optionPart: kendall
+                        enable: (heatmap)
+                      - type: CheckBox
+                        name: heatmapDetails
+                        label: Details
+                        enable: (heatmap)

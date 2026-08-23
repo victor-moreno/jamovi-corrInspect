@@ -1,0 +1,170 @@
+#
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-08-23 00:00:00+0000\n"
+"PO-Revision-Date: 2026-08-23 00:00:00+0000\n"
+"Last-Translator: Victor Moreno <v.moreno@iconcologia.net>\n"
+"Language-Team: Catalan\n"
+"Language: ca\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+
+#: jamovi/0000.yaml
+#: jamovi/corrinspect.a.yaml
+msgid "Correlation Inspector"
+msgstr "Inspector de correlacions"
+
+#: jamovi/0000.yaml
+#: jamovi/corrinspect.a.yaml
+msgid "Pairwise & one-vs-rest correlations"
+msgstr "Correlacions per parells i una-contra-la-resta"
+
+#: jamovi/corrinspect.a.yaml
+msgid ""
+"Correlations between two or more variables, presented pair by pair "
+"instead of as a matrix. With exactly two variables this is a single "
+"clean result. With more, choose between comparing all variables against "
+"all others, or one reference variable against the rest -- useful for "
+"inspecting candidate predictors or confounders before a regression."
+msgstr ""
+"Correlacions entre dues o més variables, presentades parell per parell "
+"en lloc de com una matriu. Amb exactament dues variables, això és un "
+"únic resultat net. Amb més, tria entre comparar totes les variables "
+"entre elles, o una variable de referència contra la resta -- útil per "
+"inspeccionar possibles predictors o factors de confusió abans d'una "
+"regressió."
+
+#: jamovi/corrinspect.a.yaml
+msgid "Regression"
+msgstr "Regressió"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Correlation"
+msgstr "Correlació"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Variables"
+msgstr "Variables"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Reference variable"
+msgstr "Variable de referència"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Reference variable axis"
+msgstr "Eix de la variable de referència"
+
+#: jamovi/corrinspect.a.yaml
+msgid "X"
+msgstr "X"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Y"
+msgstr "Y"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Pearson"
+msgstr "Pearson"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Spearman"
+msgstr "Spearman"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Kendall's tau-b"
+msgstr "Tau-b de Kendall"
+
+#: jamovi/corrinspect.a.yaml
+#: jamovi/corrinspect.u.yaml
+msgid "Hypothesis"
+msgstr "Hipòtesi"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Correlated"
+msgstr "Correlacionat"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Correlated positively"
+msgstr "Correlacionat positivament"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Correlated negatively"
+msgstr "Correlacionat negativament"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Report p-value"
+msgstr "Informa del valor p"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Flag significant correlations"
+msgstr "Marca les correlacions significatives"
+
+#: jamovi/corrinspect.a.yaml
+msgid "N"
+msgstr "N"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Confidence interval"
+msgstr "Interval de confiança"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Confidence interval width"
+msgstr "Amplada de l'interval de confiança"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Scatterplots"
+msgstr "Diagrames de dispersió"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Densities for variables"
+msgstr "Densitats de les variables"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Correlation heatmap"
+msgstr "Mapa de calor de la correlació"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Coefficient"
+msgstr "Coeficient"
+
+#: jamovi/corrinspect.a.yaml
+msgid "Details"
+msgstr "Detalls"
+
+#: jamovi/corrinspect.u.yaml
+msgid "Correlation Coefficients"
+msgstr "Coeficients de Correlació"
+
+#: jamovi/corrinspect.u.yaml
+msgid "Additional Options"
+msgstr "Opcions Addicionals"
+
+#: jamovi/corrinspect.u.yaml
+msgid "Plot"
+msgstr "Gràfic"
+
+#: jamovi/corrinspect.r.yaml
+msgid "Correlations"
+msgstr "Correlacions"
+
+#: jamovi/corrinspect.r.yaml
+msgid "Compared with"
+msgstr "Comparat amb"
+
+#: jamovi/corrinspect.r.yaml
+msgid "95% CI"
+msgstr "IC del 95%"
+
+#: jamovi/corrinspect.r.yaml
+msgid "r"
+msgstr "r"
+
+#: jamovi/corrinspect.r.yaml
+msgid "p"
+msgstr "p"
+
+#: jamovi/corrinspect.r.yaml
+msgid "Scatterplot(s)"
+msgstr "Diagrama(es) de dispersió"

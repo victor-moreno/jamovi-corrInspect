@@ -37,6 +37,16 @@ ciText <- function(low, high) {
     sprintf('[%.3f, %.3f]', low, high)
 }
 
+# Compact p-value text for a heatmap cell (not jamovi's own pvalue format,
+# which isn't reachable from plain R).
+pText <- function(p) {
+    if (is.na(p))
+        return('')
+    if (p < .001)
+        return('p<.001')
+    sprintf('p=%.3f', p)
+}
+
 # Fisher z-transform CI for a rank correlation (Spearman's rho or Kendall's
 # tau), using the Fieller, Hartley & Pearson (1957) variance correction
 # Var(z) = 0.437/(n-4) in place of the 1/(n-3) that's exact for Pearson's r.

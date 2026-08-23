@@ -10,16 +10,25 @@ A jamovi module that clones `jmv::corrMatrix`, redesigned for cleaner output:
   comparison, restyled) and an optional "Reference variable" box — set it
   and the analysis switches to comparing it against the rest of Variables,
   no separate mode switch to keep in sync.
-- **Annotated scatterplots**: r, its CI and the fitted regression line
+- **Annotated scatterplot(s)**: r, its CI and the fitted regression line
   printed on the plot itself, in the style of `jamovi-jmvplus`'s `scat`
-  analysis, plus optional marginal densities.
+  analysis, plus optional marginal densities. With more than two Variables
+  (and no reference variable), a scatterplot matrix instead of a single
+  plot.
 - **Colour-coded heatmap**, its own toggle independent of the scatterplot
-  option, for the all-vs-all overview with more than two variables (instead
-  of jmv's plain-text matrix plot).
+  option -- both can be shown at once -- for the all-vs-all overview with
+  more than two variables (instead of jmv's plain-text matrix plot). Its
+  coefficient (Pearson/Spearman/Kendall) is independently selectable, and
+  a "Details" toggle adds each cell's CI/p/N/significance flag, reusing
+  the table's own ci/sig/n/flag options instead of adding one per stat.
 - **95% CI** for Pearson (exact, from `cor.test`), and for Spearman/Kendall
   via the Fisher z-transform with the Fieller, Hartley & Pearson (1957)
   variance correction (`Var(z) = 0.437/(n-4)`) — base R's `cor.test` has no
   CI for those two.
+- **Spanish and Catalan translations** (`jamovi/i18n/es.po`, `ca.po`) for
+  all visible menu/option/table/plot text. Long tooltips and R-generated
+  dynamic strings (the reference-mode table's title, method labels) aren't
+  translated yet -- see `task_plan.md` for why.
 
 See `corrInspect/` for the R package (jamovi module). `task_plan.md`,
 `findings.md` and `progress.md` at the repo root are the working notes from
@@ -28,17 +37,19 @@ building it — not shipped documentation.
 ## Status
 
 Builds and installs cleanly on the user's machine (desktop + Docker, via
-`tools/install.sh`) as of 2026-08-23; the dev sandbox this was written in
-has a broken/mismatched jmvtools/node toolchain and could never run the
-build itself (see `jamovi_build_toolchain` memory / `progress.md` for that
-dead end). `R/corrCompute.R` (the pure statistics layer) is unit-tested
-against base R's `cor.test` — see `corrInspect/tests/testthat/`. Feedback
-from a first real test round (2026-08-23) is being worked through: options
-were reshaped from an explicit "mode" selector + separate "compare with"
-box down to just Variables + an optional Reference variable, the heatmap
-became its own toggle instead of auto-triggering on variable count, CI
-decimals now match r's 3 decimals, and Spearman/Kendall got CIs. Not yet
-re-verified in a real jamovi after this round.
+`tools/install.sh`); the dev sandbox this was written in has a
+broken/mismatched jmvtools/node toolchain and could never run the build
+itself (see `jamovi_build_toolchain` memory / `progress.md`). `R/corrCompute.R`
+(the pure statistics layer) is unit-tested against base R's `cor.test` and
+hand-derived formulas — see `corrInspect/tests/testthat/`. Three real-test
+rounds so far (2026-08-23): mode selector removed in favour of Variables +
+optional Reference variable, scatterplot vs. heatmap split into two
+independent toggles/Images (a genuine bug -- they couldn't both show at
+once before), heatmap's coefficient made selectable, and i18n added. Not
+yet re-verified in a real jamovi after this round -- in particular
+`enable: (refVar)` in the `.u.yaml` (an unverified truthy-test on a
+Variable-type option) and whether the translations actually apply when
+switching jamovi's language.
 
 ## Build
 
