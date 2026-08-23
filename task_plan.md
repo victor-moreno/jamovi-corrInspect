@@ -355,15 +355,40 @@ traducciones funcionan (ronda 3, ya cerrado) — quitados de "pendientes".
 Densities (eliminado la ronda pasada) no se volvió a tocar — el usuario
 no lo mencionó esta vez, coherente con que ya no existe.
 
+## Ronda 6 (2026-08-23): diagnóstico del bug de refVar+factor
+Usuario dio el texto exacto del error:
+```
+Error in var(if (is.vector(x) || is.factor(x)) x else as.double(x), na.rm = na.rm):
+Calling var(x) on a factor x is defunct.
+private$.run() → private$.runAllVsAll() → corrFit(x, y, m, alternative, ciWidth) → stats::sd(y)
+```
+Causa raíz confirmada probando `jmvcore::toNumeric()` directamente en R
+(no adivinado): para un factor NOMINAL de texto, `toNumeric()` lo deja
+TAL CUAL (mira si tiene un atributo `"values"` de jamovi; si no hay
+conversión numérica sensata, no convierte nada) — comportamiento
+correcto de `toNumeric()`, no un bug suyo. El bug era mío: `vars`/`refVar`
+tenían `permitted: [numeric, factor]` (copiado de jmv::corrMatrix), así
+que jamovi SÍ dejaba arrastrar un factor nominal al panel, y luego
+`stats::sd()` en `corrFit()` explotaba con ese factor sin convertir en R
+moderno (`var()` en un factor es "defunct" desde hace unas versiones).
+Fix: `permitted: [numeric, factor]` → `permitted: [numeric]` en ambas
+opciones (a.yaml), y `suggested` ajustado a `[continuous]` (ya no tiene
+sentido sugerir "ordinal" si "factor" ni siquiera está permitido). Con
+esto jamovi bloquea el factor en el propio panel, como pedía el usuario
+("jamovi no debería permitir añadir una variable factor") — no se tocó
+el código R (no hace falta blindaje extra en `corrFit()` ya que la vía
+de entrada real, el panel, queda cerrada; la función R exportada
+`corrInspect()` sigue sin blindar para uso directo desde script, pero
+eso está fuera de lo reportado y no se ha añadido complejidad para un
+caso no visto).
+
 ## Next Step
-El usuario reconstruye y prueba de nuevo. Punto bloqueante real: dame el
-texto exacto del error al meter un factor en "Reference variable" — sin
-eso no puedo diagnosticar el punto 1 de la Ronda 5. Aparte, a confirmar:
-- Layout "Pairs" con >2 variables sin referencia (arrastrado de la
-  Ronda 4, sin confirmar todavía).
-- heatmap en modo referencia (columna única) — arrastrado de la Ronda 4.
-- que el recorte del eje Y (`coord_cartesian`) se vea bien con datos
-  reales variados, no solo el ejemplo sintético usado para verificar.
-- estética del heatmap (leyenda/fuente) a tamaños reales del panel de
-  jamovi, no solo el PNG standalone probado aquí.
-- IC95% de Spearman/Kendall: valores razonables, no solo que "aparezcan".
+El usuario reconstruye y prueba de nuevo, en particular que ya NO se
+pueda arrastrar un factor a Variables/Reference variable. Pendientes
+arrastradas de rondas anteriores, sin confirmar todavía:
+- Layout "Pairs" con >2 variables sin referencia (Ronda 4).
+- heatmap en modo referencia (columna única) (Ronda 4).
+- recorte del eje Y (`coord_cartesian`) con datos reales variados (Ronda 5).
+- estética del heatmap (leyenda/fuente) a tamaños reales del panel (Ronda 5).
+- IC95% de Spearman/Kendall con valores razonables, no solo que aparezcan
+  (Ronda 2).

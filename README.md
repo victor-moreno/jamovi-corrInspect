@@ -59,11 +59,15 @@ gridExtra plot compositions (the scatterplot matrix, the square heatmap
 with a bottom legend, the left-aligned annotation) are rendered to a plain
 PNG standalone before being wired into the module, to catch composition
 bugs before jamovi-specific ones -- but the module itself still only gets
-validated when the user builds and clicks through it. Five real-test
+validated when the user builds and clicks through it. Six real-test
 rounds so far (2026-08-23). `enable: (refVar)` and the translations are
-now confirmed working. Open: dropping a factor variable into "Reference
-variable" throws an error -- cause not yet diagnosed, waiting on the exact
-error text (see `task_plan.md`).
+confirmed working. Fixed: `vars`/`refVar` permitted `factor` alongside
+`numeric` (copied from jmv's own corrMatrix), so jamovi let a nominal
+factor be dropped in; `jmvcore::toNumeric()` correctly leaves a
+text-label nominal factor unconverted (there's no sensible numeric
+reading), and the analysis crashed calling `sd()` on it directly. Now
+`permitted: [ numeric ]` only, so jamovi blocks it at the panel instead
+of it reaching R at all.
 
 ## Build
 

@@ -165,3 +165,17 @@
   ese punto); confirmar en jamovi real el layout "Pairs", el heatmap en
   modo referencia, el recorte de eje Y con datos reales, y la estética
   del heatmap a tamaños reales de panel.
+
+## 2026-08-23 (ronda 6 — fix del bug refVar+factor)
+- Usuario dio el error exacto: `var(x) on a factor x is defunct`, en
+  `corrFit() → stats::sd(y)`. Confirmado probando `jmvcore::toNumeric()`
+  directamente contra un factor nominal de texto: lo deja sin convertir
+  (comportamiento correcto de toNumeric, no un bug suyo). El bug real:
+  `vars`/`refVar` permitían `factor` en a.yaml (copiado de
+  jmv::corrMatrix), dejando pasar un factor nominal hasta `sd()`.
+- Fix: `permitted: [numeric, factor]` → `permitted: [numeric]` en ambas
+  opciones; `suggested` ajustado a `[continuous]`. Jamovi ahora bloquea
+  el factor en el propio panel — sin tocar código R, la vía de entrada
+  queda cerrada en la UI.
+- Pendiente: reconstruir y confirmar que el factor ya no se puede
+  arrastrar; el resto de puntos abiertos de rondas 4-5 sigue igual.
