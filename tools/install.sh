@@ -124,7 +124,7 @@ Rscript --vanilla -e '
     library(corrInspect)
 
     data(mtcars)
-    results <- corrInspect::corrInspect(data = mtcars, mode = "allVsAll", vars = c("mpg", "hp"))
+    results <- corrInspect::corrInspect(data = mtcars, vars = c("mpg", "hp"))
     tbl <- results$tableAllVsAll$asDF
     oracle <- cor(mtcars$mpg, mtcars$hp)
     stopifnot(isTRUE(all.equal(tbl$r[1], oracle, tolerance = 1e-6)))
@@ -144,8 +144,7 @@ Rscript --vanilla -e '
 
     data(mtcars)
     results <- corrInspect::corrInspect(
-        data = mtcars, mode = "refVsRest",
-        refVar = "mpg", compareVars = c("hp", "wt")
+        data = mtcars, vars = c("hp", "wt"), refVar = "mpg"
     )
     tbl <- results$tableRefVsRest$asDF
     stopifnot(nrow(tbl) == 2)

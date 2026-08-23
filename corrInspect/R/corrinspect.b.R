@@ -10,12 +10,24 @@ corrInspectClass <- R6::R6Class(
         },
 
         .run = function() {
-            mode <- self$options$mode
-            if (mode == 'allVsAll')
-                private$.runAllVsAll()
-            else
+            if (private$.isRefMode())
                 private$.runRefVsRest()
+            else
+                private$.runAllVsAll()
             private$.updateVisibility()
+        },
+
+        # analysis mode is derived, not a separate option: a reference
+        # variable set means "one vs. the rest", empty means "all vs. all".
+        .isRefMode = function() length(self$options$refVar) > 0,
+
+        # the comparison set for "one vs. the rest": Variables minus the
+        # reference variable, in case the user put it in both boxes.
+        .restVars = function() {
+            refVar <- self$options$refVar
+            if (length(refVar) == 0)
+                return(self$options$vars)
+            setdiff(self$options$vars, refVar)
         },
 
         # ---- structure (must exist by the end of .init(), see jamovi-skill) ----
@@ -23,24 +35,20 @@ corrInspectClass <- R6::R6Class(
         .initTable = function() {
             methods <- corrMethods(self$options$pearson, self$options$spearman, self$options$kendall)
 
-            if (self$options$mode == 'allVsAll') {
+            if (private$.isRefMode()) {
+                for (v in private$.restVars()) {
+                    for (m in methods) {
+                        self$results$tableRefVsRest$addRow(
+                            rowKey = paste(v, m, sep = '|'),
+                            values = list(var2 = v, stat = methodLabel(m)))
+                    }
+                }
+            } else {
                 for (pair in private$.pairs(self$options$vars)) {
                     for (m in methods) {
                         self$results$tableAllVsAll$addRow(
                             rowKey = paste(pair[1], pair[2], m, sep = '|'),
                             values = list(var1 = pair[1], var2 = pair[2], stat = methodLabel(m)))
-                    }
-                }
-            } else {
-                refVar <- self$options$refVar
-                compareVars <- self$options$compareVars
-                if (length(refVar) == 0 || length(compareVars) == 0)
-                    return()
-                for (v in compareVars) {
-                    for (m in methods) {
-                        self$results$tableRefVsRest$addRow(
-                            rowKey = paste(v, m, sep = '|'),
-                            values = list(var2 = v, stat = methodLabel(m)))
                     }
                 }
             }
@@ -49,9 +57,9 @@ corrInspectClass <- R6::R6Class(
         .initPlots = function() {
             self$results$plotAllVsAll$setSize(500, 400)
 
-            if (self$options$mode == 'refVsRest') {
+            if (private$.isRefMode()) {
                 array <- self$results$plotRefVsRest
-                for (v in self$options$compareVars) {
+                for (v in private$.restVars()) {
                     item <- array$addItem(key = v)
                     item$setSize(450, 350)
                 }
@@ -97,8 +105,8 @@ corrInspectClass <- R6::R6Class(
 
         .runRefVsRest = function() {
             refVar <- self$options$refVar
-            compareVars <- self$options$compareVars
-            if (length(refVar) == 0 || length(compareVars) == 0)
+            restVars <- private$.restVars()
+            if (length(restVars) == 0)
                 return()
 
             methods <- corrMethods(self$options$pearson, self$options$spearman, self$options$kendall)
@@ -110,7 +118,7 @@ corrInspectClass <- R6::R6Class(
             tbl$setTitle(paste0('Correlations — ', refVar, ' vs. others'))
 
             x <- jmvcore::toNumeric(data[[refVar]])
-            for (v in compareVars) {
+            for (v in restVars) {
                 y <- jmvcore::toNumeric(data[[v]])
                 for (m in methods) {
                     fit <- corrFit(x, y, m, alternative, ciWidth)
@@ -126,25 +134,41 @@ corrInspectClass <- R6::R6Class(
         },
 
         .updateVisibility = function() {
-            mode <- self$options$mode
-            showPlots <- isTRUE(self$options$plots)
-            self$results$plotAllVsAll$setVisible(showPlots && mode == 'allVsAll')
-            self$results$plotRefVsRest$setVisible(showPlots && mode == 'refVsRest')
+            refMode <- private$.isRefMode()
+            vars <- self$options$vars
+
+            showAllVsAll <- !refMode && length(vars) >= 2 && (
+                (length(vars) == 2 && isTRUE(self$options$plots)) ||
+                (length(vars) > 2 && isTRUE(self$options$heatmap)))
+
+            self$results$tableAllVsAll$setVisible(!refMode)
+            self$results$tableRefVsRest$setVisible(refMode)
+            self$results$plotAllVsAll$setVisible(showAllVsAll)
+            self$results$plotRefVsRest$setVisible(refMode && isTRUE(self$options$plots))
         },
 
         # ---- plots ----
 
+        # 2 variables selected: an annotated scatter of that one pair (the
+        # "Scatterplots" option). More than 2: a heatmap overview instead
+        # (its own "Correlation heatmap" option) -- these are independent
+        # toggles, not one plot auto-switching shape on variable count.
         .plotAllVsAll = function(image, ggtheme, theme, ...) {
-            if (!isTRUE(self$options$plots) || self$options$mode != 'allVsAll')
+            if (private$.isRefMode())
                 return(FALSE)
 
             vars <- self$options$vars
             if (length(vars) < 2)
                 return(FALSE)
 
-            if (length(vars) == 2)
+            if (length(vars) == 2) {
+                if (!isTRUE(self$options$plots))
+                    return(FALSE)
                 return(private$.drawAnnotatedScatter(vars[1], vars[2], ggtheme, theme))
+            }
 
+            if (!isTRUE(self$options$heatmap))
+                return(FALSE)
             p <- private$.heatmap(vars, ggtheme, theme)
             if (is.null(p))
                 return(FALSE)
@@ -153,7 +177,7 @@ corrInspectClass <- R6::R6Class(
         },
 
         .plotRefVsRest = function(image, ggtheme, theme, ...) {
-            if (!isTRUE(self$options$plots) || self$options$mode != 'refVsRest')
+            if (!private$.isRefMode() || !isTRUE(self$options$plots))
                 return(FALSE)
 
             refVar <- self$options$refVar

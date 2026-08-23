@@ -7,9 +7,10 @@ items:
     - name: tableAllVsAll
       title: Correlations
       type: Table
-      visible: (mode:allVsAll)
+      visible: false
       clearWith:
           - vars
+          - refVar
           - pearson
           - spearman
           - kendall
@@ -52,10 +53,10 @@ items:
     - name: tableRefVsRest
       title: Correlations
       type: Table
-      visible: (mode:refVsRest)
+      visible: false
       clearWith:
           - refVar
-          - compareVars
+          - vars
           - pearson
           - spearman
           - kendall
@@ -99,13 +100,15 @@ items:
       renderFun: .plotAllVsAll
       clearWith:
           - vars
+          - refVar
           - pearson
           - spearman
           - kendall
           - ci
           - ciWidth
+          - plots
           - plotDens
-          - mode
+          - heatmap
 
     - name: plotRefVsRest
       title: Scatterplots
@@ -117,12 +120,12 @@ items:
           requiresData: true
       clearWith:
           - refVar
-          - compareVars
+          - vars
           - refAxis
           - pearson
           - ci
           - ciWidth
+          - plots
           - plotDens
-          - mode
 
 ...

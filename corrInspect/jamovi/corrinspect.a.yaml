@@ -30,24 +30,6 @@ options:
       description:
           R: the data as a data frame
 
-    - name: mode
-      title: Analysis mode
-      type: List
-      options:
-        - name: allVsAll
-          title: All variables vs. all
-        - name: refVsRest
-          title: One variable vs. the rest
-      default: allVsAll
-      description:
-          ui: >
-              'All variables vs. all' compares every selected variable
-              against every other. 'One variable vs. the rest' compares a
-              single reference variable against a set of others.
-          R: >
-              `'allVsAll'` (default) or `'refVsRest'`, which comparison
-              layout to use
-
     - name: vars
       title: Variables
       type: Variables
@@ -55,8 +37,13 @@ options:
       permitted: [ numeric, factor ]
       default: ~
       description:
-          ui: the variables to correlate, pairwise (used in 'All variables vs. all' mode).
-          R: a vector of strings naming the variables to correlate pairwise in `data`
+          ui: >
+              the variables to correlate. With 'Reference variable' empty,
+              every variable here is compared against every other. With a
+              reference variable set, these are compared against it instead
+              (minus the reference variable itself, if it's also selected
+              here).
+          R: a vector of strings naming the variables to correlate in `data`
 
     - name: refVar
       title: Reference variable
@@ -65,18 +52,13 @@ options:
       permitted: [ numeric, factor ]
       default: ~
       description:
-          ui: the variable to compare against each of `compareVars` (used in 'One variable vs. the rest' mode).
-          R: a string naming the reference variable in `data`
-
-    - name: compareVars
-      title: Compare with
-      type: Variables
-      suggested: [ continuous, ordinal ]
-      permitted: [ numeric, factor ]
-      default: ~
-      description:
-          ui: the variables to compare against the reference variable (used in 'One variable vs. the rest' mode).
-          R: a vector of strings naming the variables in `data` to compare against `refVar`
+          ui: >
+              optional. When set, switches from 'all variables vs. all' to
+              'one variable vs. the rest': this variable is compared against
+              each of the Variables instead of them being compared pairwise.
+          R: >
+              a string naming the reference variable in `data`, or `NULL`
+              (default) for all-vs-all correlations among `vars`
 
     - name: refAxis
       title: Reference variable axis
@@ -156,7 +138,7 @@ options:
       type: Bool
       default: false
       description:
-          R: '`TRUE` or `FALSE` (default), provide a confidence interval for Pearson''s r'
+          R: '`TRUE` or `FALSE` (default), provide a confidence interval for each correlation coefficient'
 
     - name: ciWidth
       title: Confidence interval width
@@ -180,5 +162,18 @@ options:
       default: false
       description:
           R: '`TRUE` or `FALSE` (default), add marginal densities to the scatterplot(s)'
+
+    - name: heatmap
+      title: Correlation heatmap
+      type: Bool
+      default: false
+      description:
+          ui: >
+              a colour-coded heatmap of all pairwise correlations. Only
+              applies with no reference variable and more than two
+              Variables selected (with two, the scatterplot above already
+              shows that one pair; with a reference variable set, see the
+              inspector scatterplots instead).
+          R: '`TRUE` or `FALSE` (default), provide a correlation heatmap'
 
 ...

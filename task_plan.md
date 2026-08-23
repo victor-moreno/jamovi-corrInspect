@@ -114,8 +114,65 @@ el heatmap y la galería refVsRest). Verificado sin poder compilar el módulo:
 - No probado en la app jamovi real (UI panel, `enable: (mode:...)`
   bindings, render de plots) — pendiente de que el usuario compile.
 
+## Ronda 2 (2026-08-23): compiló bien, feedback de uso real
+El usuario compiló con éxito (desktop + docker, vía `tools/install.sh`) y
+probó el módulo. Feedback, y lo que cambié en respuesta:
+
+1. Bug de NAMESPACE (`corrInspect::corrInspect` no exportado) → arreglado,
+   ver commit `a5c43b3`.
+2. ">3 variables da heatmap automático, debería ser una opción aparte" →
+   nueva opción `heatmap` (Bool), independiente de `plots`. `plotAllVsAll`
+   ahora: 2 vars usa `plots`; >2 vars usa `heatmap`. Ya NO cambia de forma
+   solo por el conteo de variables.
+3. "Density no hace nada en los plots" → probado standalone (script en
+   `.tmp/`, borrado tras confirmar) que `gridExtra::grid.arrange` con
+   densidades marginales SÍ dibuja bien fuera de jamovi. Sospecha fuerte:
+   el usuario probaba con >2 variables, donde antes se mostraba el heatmap
+   (que nunca usa plotDens) — el fix del punto 2 probablemente resuelve
+   esto como efecto colateral. Pendiente confirmar con exactamente 2
+   variables o en modo ref-vs-resto.
+4. "IC95% debería mostrar 3 decimales como r" → `ciText()` en
+   corrCompute.R: `%.2f` → `%.3f`.
+5. "IC95% no aparece para Spearman/Kendall" (usuario dio un link de Cross
+   Validated sobre Spearman) → investigado (WebSearch, CV bloqueó
+   WebFetch con 403): Fieller, Hartley & Pearson (1957) recomiendan la
+   MISMA corrección Var(z)=0.437/(n-4) sobre el z de Fisher para AMBOS,
+   rho de Spearman y tau de Kendall (no solo Spearman, como el usuario
+   pensaba al no encontrar nada específico para Kendall). Implementado
+   como `fisherZCI()` en corrCompute.R,
+   usado en `corrFit()` para method %in% c('spearman','kendall'); Pearson
+   sigue usando el CI exacto de `cor.test`. Tests en
+   test-corrCompute.R recomputan la fórmula independientemente como
+   oráculo (no hay oráculo externo en base R para esto).
+6. Rediseño de UI para el modo "una vs. el resto": eliminado el option
+   `mode` (List) Y el box `compareVars` por completo. Ahora solo 2 cajas:
+   `vars` (Variables) y `refVar` (Variable, opcional). Si `refVar` está
+   vacío → allVsAll con `vars`. Si `refVar` tiene una variable → refVsRest,
+   comparando contra `setdiff(vars, refVar)` (por si el usuario mete la
+   misma variable en ambas cajas). Esto es un cambio de arquitectura
+   respecto a la decisión original de la Ronda 1 (2 cajas separadas
+   refVar/compareVars) — el usuario pidió específicamente colapsar
+   `compareVars` dentro de `vars` y quitar el selector de modo explícito.
+   Afecta a.yaml, r.yaml (visible: (mode:...) → visible: false + control
+   100% por R vía setVisible, ya que `mode` ya no existe como opción),
+   u.yaml (quitado RadioButton de mode y TargetLayoutBox de compareVars;
+   refAxis ahora usa `enable: (refVar)` — truthy test sobre un option
+   Variable, NO verificado en compilador real, es la mayor incertidumbre
+   de este round) y corrinspect.b.R (`.isRefMode()`/`.restVars()`
+   reemplazan las referencias a `self$options$mode`/`compareVars`).
+   `tools/install.sh` actualizado a la nueva firma de
+   `corrInspect::corrInspect(data, vars, refVar=NULL, ...)`.
+
+Borrado `R/corrinspect.h.R` del repo (quedó obsoleto tras cambiar las
+opciones y no se pudo regenerar en este sandbox) — se regenera solo en el
+próximo `jmvtools::prepare()`/`install()` del usuario.
+
 ## Next Step
-El usuario compila (`jmvtools::prepare("corrInspect"); jmvtools::install("corrInspect")`)
-en su entorno habitual y prueba en jamovi real. Si aparecen errores de
-compilación de yaml o de R en tiempo de ejecución, iterar aquí sobre esos
-mensajes concretos.
+El usuario reconstruye (`bash tools/install.sh`) y prueba de nuevo en
+jamovi real. Puntos concretos a verificar:
+- que `enable: (refVar)` compile (sintaxis no probada en compilador real
+  para un option tipo Variable en vez de Bool/List).
+- que plotDens ahora sí se vea con 2 variables o en modo ref-vs-resto.
+- que el heatmap solo aparezca al marcar la nueva casilla "Correlation
+  heatmap", no automáticamente.
+- IC95% de Spearman/Kendall: valores razonables, no solo que "aparezcan".

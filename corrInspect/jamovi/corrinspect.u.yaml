@@ -16,7 +16,6 @@ children:
                 - type: VariablesListBox
                   name: vars
                   isTarget: true
-                  enable: (mode:allVsAll)
           - type: TargetLayoutBox
             label: Reference variable
             children:
@@ -24,30 +23,11 @@ children:
                   name: refVar
                   isTarget: true
                   maxItemCount: 1
-                  enable: (mode:refVsRest)
-          - type: TargetLayoutBox
-            label: Compare with
-            children:
-                - type: VariablesListBox
-                  name: compareVars
-                  isTarget: true
-                  enable: (mode:refVsRest)
 
     - type: LayoutBox
       margin: large
       style: inline
       children:
-          - type: Label
-            label: Analysis mode
-            children:
-                - type: RadioButton
-                  name: mode_allVsAll
-                  optionName: mode
-                  optionPart: allVsAll
-                - type: RadioButton
-                  name: mode_refVsRest
-                  optionName: mode
-                  optionPart: refVsRest
           - type: Label
             label: Reference variable axis
             children:
@@ -55,12 +35,12 @@ children:
                   name: refAxis_x
                   optionName: refAxis
                   optionPart: x
-                  enable: (mode:refVsRest)
+                  enable: (refVar)
                 - type: RadioButton
                   name: refAxis_y
                   optionName: refAxis
                   optionPart: y
-                  enable: (mode:refVsRest)
+                  enable: (refVar)
 
     - type: LayoutBox
       margin: large
@@ -122,3 +102,5 @@ children:
                       - type: CheckBox
                         name: plotDens
                         enable: (plots)
+                - type: CheckBox
+                  name: heatmap

@@ -6,15 +6,20 @@ A jamovi module that clones `jmv::corrMatrix`, redesigned for cleaner output:
   method), with the 95% CI collapsed into a single `[lower, upper]` cell
   instead of separate columns. With exactly two variables this naturally
   reduces to a single row.
-- **Two analysis modes**: "All variables vs. all" (jmv's usual comparison,
-  restyled) or "One variable vs. the rest" — a reference variable (its own
-  box) compared against a set of others, for inspecting candidate predictors
-  or confounders before a regression.
+- **Two analysis modes, one box each**: "Variables" (all-vs-all, jmv's usual
+  comparison, restyled) and an optional "Reference variable" box — set it
+  and the analysis switches to comparing it against the rest of Variables,
+  no separate mode switch to keep in sync.
 - **Annotated scatterplots**: r, its CI and the fitted regression line
   printed on the plot itself, in the style of `jamovi-jmvplus`'s `scat`
   analysis, plus optional marginal densities.
-- **Colour-coded heatmap** instead of jmv's plain-text matrix plot, for the
-  all-vs-all overview with more than two variables.
+- **Colour-coded heatmap**, its own toggle independent of the scatterplot
+  option, for the all-vs-all overview with more than two variables (instead
+  of jmv's plain-text matrix plot).
+- **95% CI** for Pearson (exact, from `cor.test`), and for Spearman/Kendall
+  via the Fisher z-transform with the Fieller, Hartley & Pearson (1957)
+  variance correction (`Var(z) = 0.437/(n-4)`) — base R's `cor.test` has no
+  CI for those two.
 
 See `corrInspect/` for the R package (jamovi module). `task_plan.md`,
 `findings.md` and `progress.md` at the repo root are the working notes from
@@ -22,17 +27,18 @@ building it — not shipped documentation.
 
 ## Status
 
-Code written and the pure statistics layer (`R/corrCompute.R`) is unit-tested
-against base R's `cor.test` — see `corrInspect/tests/testthat/`. The jamovi
-build step (`jmvtools::prepare()` / `install()`) could not be completed in
-the dev sandbox: `jamovi-compiler` (bundled with `jmvtools`) fails with "a
-newer version of the jamovi-compiler (or jmvtools) is required" — reproduced
-on the already-working `conttables2xK` sibling module too, so it is a local
-toolchain issue, not something wrong with this module's code. The sandbox's
-`node` is v26.7.0 (homebrew, very recent); `jamovi-compiler` 0.3.5 most
-likely wasn't built against anything that new. Try building with an older
-Node (18–20) on the machine that normally builds these modules, and if the
-same error appears there too, that pins the cause down further.
+Builds and installs cleanly on the user's machine (desktop + Docker, via
+`tools/install.sh`) as of 2026-08-23; the dev sandbox this was written in
+has a broken/mismatched jmvtools/node toolchain and could never run the
+build itself (see `jamovi_build_toolchain` memory / `progress.md` for that
+dead end). `R/corrCompute.R` (the pure statistics layer) is unit-tested
+against base R's `cor.test` — see `corrInspect/tests/testthat/`. Feedback
+from a first real test round (2026-08-23) is being worked through: options
+were reshaped from an explicit "mode" selector + separate "compare with"
+box down to just Variables + an optional Reference variable, the heatmap
+became its own toggle instead of auto-triggering on variable count, CI
+decimals now match r's 3 decimals, and Spearman/Kendall got CIs. Not yet
+re-verified in a real jamovi after this round.
 
 ## Build
 

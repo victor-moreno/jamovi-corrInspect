@@ -34,7 +34,22 @@ starsFor <- function(p) {
 ciText <- function(low, high) {
     if (is.na(low) || is.na(high))
         return('')
-    sprintf('[%.2f, %.2f]', low, high)
+    sprintf('[%.3f, %.3f]', low, high)
+}
+
+# Fisher z-transform CI for a rank correlation (Spearman's rho or Kendall's
+# tau), using the Fieller, Hartley & Pearson (1957) variance correction
+# Var(z) = 0.437/(n-4) in place of the 1/(n-3) that's exact for Pearson's r.
+# base R's cor.test() has no conf.int for these methods; this is the
+# standard closed-form approximation other stats packages use instead
+# (recommended by Fieller et al. for |r| up to about .8).
+fisherZCI <- function(r, n, ciWidth) {
+    if (is.na(r) || n <= 4)
+        return(list(low = NA_real_, high = NA_real_))
+    z <- atanh(pmin(pmax(r, -0.9999), 0.9999))
+    se <- sqrt(0.437 / (n - 4))
+    zcrit <- stats::qnorm(1 - (1 - ciWidth / 100) / 2)
+    list(low = tanh(z - zcrit * se), high = tanh(z + zcrit * se))
 }
 
 # One pairwise correlation. Returns r/n/p/ciLow/ciHigh, NA where undefined
@@ -61,6 +76,10 @@ corrFit <- function(x, y, method, alternative, ciWidth) {
     if (method == 'pearson' && !is.null(fit$conf.int)) {
         out$ciLow  <- fit$conf.int[1]
         out$ciHigh <- fit$conf.int[2]
+    } else if (method %in% c('spearman', 'kendall')) {
+        ci <- fisherZCI(out$r, n, ciWidth)
+        out$ciLow  <- ci$low
+        out$ciHigh <- ci$high
     }
     out
 }
