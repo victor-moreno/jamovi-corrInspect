@@ -40,3 +40,22 @@ same error appears there too, that pins the cause down further.
 jmvtools::prepare("corrInspect")
 jmvtools::install("corrInspect")
 ```
+
+## Install (desktop + Docker)
+
+`tools/install.sh`, adapted from `jamovi-jmvplus/tools/install.sh`, builds
+the module and installs it into jamovi desktop and/or a running jamovi
+Docker container, with a smoke test in Docker (all-vs-all and one-vs-rest
+correlations checked against base R's `cor()`):
+
+```
+bash tools/install.sh              # both targets, whichever are available
+bash tools/install.sh desktop
+bash tools/install.sh docker [container]   # default container: jamovi
+```
+
+Desktop expects `~/R/.Rlib-arm` or `~/R/.Rlib-x64` (per architecture) with
+jmvtools installed, and `/Applications/jamovi.app`. Docker expects a running
+container with `jmc` on its PATH. Not adapted from jmvplus (not asked for
+yet): `prepare-jmo.sh` (repackaging a built `.jmo` for other OS/R-version
+combinations) and `release.sh` (publishing `.jmo`s as a GitHub release).

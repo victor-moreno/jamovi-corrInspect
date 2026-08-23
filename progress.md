@@ -25,3 +25,13 @@
 - git init dentro de jamovi-corr/ (repo independiente, como los módulos
   hermanos) + primer commit.
 - Pendiente: compilar en la máquina del usuario y probar en jamovi real.
+
+## 2026-08-23 (cont.)
+- Adaptado `tools/install.sh` de jamovi-jmvplus para corrInspect (build +
+  install en desktop y docker). Smoke tests propios en docker (allVsAll y
+  refVsRest contra cor() base R), reemplazando los de jmvplus (CV,
+  intervalo de predicción de scat, que no aplican aquí).
+  No adaptados (no pedidos): prepare-jmo.sh, release.sh.
+  Nota dejada en el script: --skip-deps asume que gridExtra ya está
+  disponible en el contenedor; si el smoke test falla por eso, instalarlo
+  a mano en el contenedor primero.
